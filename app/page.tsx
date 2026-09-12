@@ -279,6 +279,7 @@ const genderQuestions: Array<{ word: string; gender: GenderValue; article: strin
 
 const GENDER_STAGE_SIZE = 10;
 const GENDER_STAGE_COUNT = genderQuestions.length / GENDER_STAGE_SIZE;
+const VOCAB_CONTENT_VERSION = 'oi-v5-2600-20260912';
 
 function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onHome: () => void }) {
   const [mode, setMode] = useState<PracticeMode>('level-select');
@@ -351,6 +352,9 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const writingWordCount = writingText.trim() ? writingText.trim().split(/\s+/).length : 0;
   const activeLearningProgress: LevelLearningProgress = learningProgress[selectedLevel] || { lesson: 0, stage: 0, startedOn: dayKey, history: {} };
   const todayLearningRecord = activeLearningProgress.history[dayKey];
+  const levelLibraryNote = language === 'zh'
+    ? `${selectedLevel}：${levelDeckIndices.length} 节日课 · ${totalVocabularyWords} 个词 · 完整词库共 ${vocabularyDecks.reduce((sum, deck) => sum + deck.words.length, 0)} 词`
+    : `${selectedLevel}: ${levelDeckIndices.length} lições · ${totalVocabularyWords} palavras · ${vocabularyDecks.reduce((sum, deck) => sum + deck.words.length, 0)} no total`;
   const recentLearningDays = Array.from({length: 7}, (_, offset) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - offset));
@@ -413,6 +417,16 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   ];
 
   useEffect(() => {
+    if (localStorage.getItem('fala-vocab-content-version') === VOCAB_CONTENT_VERSION) return;
+    const stalePrefixes = ['fala-vocab-session-', 'fala-checkin-', 'fala-vocab-next-deck', 'fala-vocab-loop'];
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
+      if (key && stalePrefixes.some(prefix => key.startsWith(prefix))) localStorage.removeItem(key);
+    }
+    localStorage.setItem('fala-vocab-content-version', VOCAB_CONTENT_VERSION);
+  }, []);
+
+  useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('fala-learning-progress') || '{}');
       if (saved && typeof saved === 'object') {
@@ -435,6 +449,10 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   }, []);
 
   useEffect(() => {
+    const savedLevel = localStorage.getItem('fala-cefr-level');
+    const activeLevel = cefrLevels.includes(savedLevel as CEFRLevel) ? savedLevel as CEFRLevel : selectedLevel;
+    if (activeLevel !== selectedLevel) setSelectedLevel(activeLevel);
+
     setCheckedIn(localStorage.getItem(`fala-checkin-${dayKey}-${selectedLevel}`) === 'done');
     try {
       const savedLoop = JSON.parse(localStorage.getItem(`fala-vocab-loop-${selectedLevel}`) || localStorage.getItem('fala-vocab-loop') || 'null');
@@ -473,8 +491,6 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       setVocabQuizScore(0);
       setRevealedReview([]);
     }
-    const savedLevel = localStorage.getItem('fala-cefr-level');
-    if (cefrLevels.includes(savedLevel as CEFRLevel)) setSelectedLevel(savedLevel as CEFRLevel);
     try {
       const savedGender = JSON.parse(localStorage.getItem(`fala-gender-${dayKey}-${selectedLevel}`) || 'null');
       if (savedGender) {
@@ -837,7 +853,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         <div><p className="eyebrow">{ui.today}</p><h1>{language === 'zh' ? vocabDeck.topicZh : vocabDeck.topicPt}</h1><small>{ui.lesson} {levelDeckPosition + 1}{ui.lessonSuffix} / {levelDeckIndices.length} · {vocabDeck.level}</small></div>
         <strong>15–20<small>MIN</small></strong>
       </div>
-      <p className="vocab-library-note">{ui.library}</p>
+      <p className="vocab-library-note">{levelLibraryNote}</p>
       <div className="vocab-loop-summary">
         <span><b>{loopUi.cycle} {vocabLoopStats.cycle}</b>{loopUi.cycleNames[loopFocusIndex]}</span>
         <span><b>{loopUi.topics}</b>{vocabLoopStats.completedTopics.filter(index=>levelDeckIndices.includes(index)).length}/{levelDeckIndices.length}</span>
