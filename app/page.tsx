@@ -456,6 +456,11 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const [writingText, setWritingText] = useState('');
   const [writingEvaluated, setWritingEvaluated] = useState(false);
   const [learningProgress, setLearningProgress] = useState<LearningProgress>({});
+  const [profileMonthIndex, setProfileMonthIndex] = useState(() => {
+    const today = new Date();
+    const monthIndex = (today.getFullYear() - 2026) * 12 + today.getMonth() - 5;
+    return Math.max(0, Math.min(13, monthIndex));
+  });
   const dayKey = getLocalDayKey();
   const vocabDeck = vocabularyDecks[vocabDeckIndex] || vocabularyDecks[0];
   const todaysWords = vocabDeck.words;
@@ -551,8 +556,20 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   };
   const completedDayKeys = new Set(Object.values(learningProgress).flatMap(progress => Object.entries(progress?.history || {}).filter(([, record]) => record.completed).map(([date]) => date)));
   const activeCompletedDays = Object.values(activeLearningProgress.history).filter(record => record.completed).length;
+  const latestCompletedDay = Array.from(completedDayKeys).filter(key => key <= dayKey).sort().at(-1);
+  let profileStreakDays = 0;
+  if (latestCompletedDay) {
+    const streakDate = new Date(`${latestCompletedDay}T00:00:00`);
+    while (completedDayKeys.has(getLocalDayKey(streakDate))) {
+      profileStreakDays += 1;
+      streakDate.setDate(streakDate.getDate() - 1);
+    }
+  }
   const currentLevelProgress = levelDeckIndices.length ? Math.min(100, Math.round((activeLearningProgress.lesson / levelDeckIndices.length) * 100)) : 0;
-  const monthlyCompletionRate = Math.min(100, Math.round((completedDayKeys.size / 30) * 100));
+  const currentMonthPrefix = dayKey.slice(0, 7);
+  const daysElapsedThisMonth = new Date().getDate();
+  const completedThisMonth = Array.from(completedDayKeys).filter(key => key.startsWith(currentMonthPrefix)).length;
+  const monthlyCompletionRate = Math.min(100, Math.round((completedThisMonth / daysElapsedThisMonth) * 100));
   const profileNickname = 'Huanru';
   const profileUi = language === 'zh' ? {
     title: '我的学习',
@@ -606,14 +623,16 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     const month = date.getMonth();
     const year = date.getFullYear();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstWeekday = date.getDay();
     const days = Array.from({ length: daysInMonth }, (_, dayIndex) => {
       const day = dayIndex + 1;
       const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const record = activeLearningProgress.history[key];
       return { key, day, record };
     });
-    return { key: `${year}-${month + 1}`, label: `${year}.${String(month + 1).padStart(2, '0')}`, days };
+    return { key: `${year}-${month + 1}`, label: `${year}.${String(month + 1).padStart(2, '0')}`, firstWeekday, days };
   });
+  const profileCalendarMonth = profileCalendarMonths[profileMonthIndex] || profileCalendarMonths[0];
   const journeyStages: Array<{ mode: PracticeMode; icon: string; title: string; meta: string }> = [
     { mode: 'vocab', icon: 'Aa', title: language==='zh'?`${selectedLevel} 词汇热身`:`Vocabulário ${selectedLevel}`, meta: language==='zh'?'词义、例句与词形':'Significado, frase e forma' },
     { mode: 'listening', icon: '◖))', title: skillUi.listening, meta: skillUi.listeningMeta },
@@ -1041,8 +1060,8 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   if (mode === 'profile') return <div className="screen-enter min-h-[790px] px-6 pb-28 pt-7">
     <header className="profile-header"><div><p className="eyebrow">{profileUi.nickname}</p><h1>{profileNickname}</h1><small>{profileUi.subtitle}</small></div><span>{selectedLevel}</span></header>
     <section className="profile-overview mt-6">
-      <article><small>{profileUi.streak}</small><strong>{activeCompletedDays || Object.values(activeLearningProgress.history).length || 1}</strong><span>{language==='zh'?'天':'dias'}</span></article>
-      <article><small>{profileUi.totalDays}</small><strong>{completedDayKeys.size || activeCompletedDays || 1}</strong><span>{language==='zh'?'天':'dias'}</span></article>
+      <article><small>{profileUi.streak}</small><strong>{profileStreakDays}</strong><span>{language==='zh'?'天':'dias'}</span></article>
+      <article><small>{profileUi.totalDays}</small><strong>{completedDayKeys.size}</strong><span>{language==='zh'?'天':'dias'}</span></article>
       <article className={todayLearningRecord?.completed?'done':''}><small>{profileUi.todayDone}</small><strong>{todayLearningRecord?.completed?'✓':(todayLearningRecord?.completedStages || 0)}</strong><span>{todayLearningRecord?.completed?profileUi.done:profileUi.pending}</span></article>
     </section>
     <section className="profile-card mt-4">
@@ -1055,8 +1074,16 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       </div>
     </section>
     <section className="profile-calendar mt-4">
-      <div className="profile-card-title"><strong>{profileUi.checkinCalendar}</strong><span>{profileUi.checkinRange}</span></div>
-      <div className="profile-calendar-scroll">{profileCalendarMonths.map(month => <article key={month.key}><h3>{month.label}</h3><div>{month.days.map(item => <span key={item.key} title={`${month.label}.${item.day}`} className={item.record?.completed?'done':item.record?'partial':''}/>)}</div></article>)}</div>
+      <div className="profile-calendar-head">
+        <button type="button" onClick={()=>setProfileMonthIndex(index=>Math.max(0,index-1))} disabled={profileMonthIndex===0}>↑</button>
+        <div><strong>{profileUi.checkinCalendar}</strong><span>{profileCalendarMonth.label} · {profileUi.checkinRange}</span></div>
+        <button type="button" onClick={()=>setProfileMonthIndex(index=>Math.min(profileCalendarMonths.length-1,index+1))} disabled={profileMonthIndex===profileCalendarMonths.length-1}>↓</button>
+      </div>
+      <div className="profile-calendar-legend"><span className="done"/>{language==='zh'?'已完成':'Concluído'}<span className="partial"/>{language==='zh'?'学习中':'Em curso'}<span/>{language==='zh'?'未学习':'Sem estudo'}</div>
+      <div className="profile-month-grid">
+        {Array.from({length: profileCalendarMonth.firstWeekday}).map((_, index) => <i key={`empty-${index}`}/>)}
+        {profileCalendarMonth.days.map(item => <span key={item.key} className={item.record?.completed?'done':item.record?'partial':''}>{item.day}</span>)}
+      </div>
     </section>
     <section className="profile-two-col mt-4">
       <article className="profile-card compact"><div className="profile-card-title"><strong>{profileUi.vocabulary}</strong><span>{vocabLoopStats.cycle}</span></div><p><b>{learnedWordEstimate}</b>{profileUi.learnedWords}</p><p><b>{activeMistakeWords.length}</b>{profileUi.reviewWords}</p></article>
