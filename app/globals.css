@@ -1587,6 +1587,10 @@ button:focus-visible {
 .speaking-timer p { font-size: 11px; line-height: 1.45; }
 .speaking-timer.active { background: #edf1bd; color: var(--tile-blue); }
 .speaking-timer.active span { color: #6f861c; animation: pulse-dot 1.2s ease infinite; }
+.speaking-playback { display: grid; gap: 9px; border: 1px solid rgba(18,61,130,.13); border-radius: 16px; background: rgba(255,255,255,.72); padding: 12px; color: var(--tile-blue); }
+.speaking-playback strong { font-size: 11px; font-weight: 950; }
+.speaking-playback audio { width: 100%; height: 36px; }
+.speaking-error { border-radius: 13px; background: #f8e9df; padding: 10px 12px; color: #b54e2d; font-size: 10px; font-weight: 900; line-height: 1.45; }
 @keyframes pulse-dot { 50% { opacity: .35; } }
 
 .reading-passage { border-left: 5px solid var(--tile-lime); border-radius: 0 16px 16px 0; background: #f4f0e5; padding: 17px; color: var(--tile-blue); font-size: 14px; font-weight: 700; line-height: 1.65; }
