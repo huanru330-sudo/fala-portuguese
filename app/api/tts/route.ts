@@ -16,7 +16,7 @@ function normalizeSpeechText(value: unknown) {
 }
 
 export async function POST(request: Request) {
-  const { text, rate } = await request.json().catch(() => ({ text: '', rate: undefined }));
+  const { text, rate } = await request.json().catch(() => ({ text: '', rate: undefined })) as { text?: unknown; rate?: unknown };
   const speechText = normalizeSpeechText(text);
 
   if (!speechText) {

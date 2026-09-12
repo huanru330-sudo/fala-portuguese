@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { getVocabularyPractice, vocabularyDecks } from './vocabulary';
-import type { VocabularyDeck } from './vocabulary';
+import type { VocabularyDeck, VocabularyWord } from './vocabulary';
 
 type Screen = 'practice' | 'review';
 type Language = 'zh' | 'pt';
@@ -107,6 +107,9 @@ type VocabLoopStats = {
 type DailyLearningRecord = { completedStages: number; completed: boolean };
 type LevelLearningProgress = { lesson: number; stage: number; startedOn: string; history: Record<string, DailyLearningRecord> };
 type LearningProgress = Partial<Record<CEFRLevel, LevelLearningProgress>>;
+type VocabLoopByLevel = Partial<Record<CEFRLevel, VocabLoopStats>>;
+type RemoteUser = { id: string; email: string; name: string };
+type CloudSyncStatus = 'checking' | 'guest' | 'ready' | 'saving' | 'error';
 
 function getLocalDayKey(date = new Date()) {
   const year = date.getFullYear();
@@ -114,6 +117,8 @@ function getLocalDayKey(date = new Date()) {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+const JOURNEY_STAGE_COUNT = 4;
 
 const defaultVocabLoopStats: VocabLoopStats = {
   cycle: 1,
@@ -124,6 +129,61 @@ const defaultVocabLoopStats: VocabLoopStats = {
 };
 
 const cefrLevels: CEFRLevel[] = ['A1','A2','B1','B2','C1','C2'];
+
+function normalizeLearningProgress(value: unknown): LearningProgress {
+  if (!value || typeof value !== 'object') return {};
+
+  const saved = value as LearningProgress;
+  const migrated: LearningProgress = {};
+  for (const level of cefrLevels) {
+    const current = saved[level];
+    if (!current || typeof current !== 'object') continue;
+
+    const historySource = current.history && typeof current.history === 'object' ? current.history : {};
+    const history = Object.fromEntries(Object.entries(historySource).map(([date, record]) => {
+      const completedStages = Math.max(0, Math.min(JOURNEY_STAGE_COUNT, Number(record.completedStages) || 0));
+      const completed = Boolean(record.completed) || completedStages >= JOURNEY_STAGE_COUNT;
+      return [date, { completedStages: completed ? JOURNEY_STAGE_COUNT : completedStages, completed }];
+    }));
+
+    migrated[level] = {
+      lesson: Math.max(0, Number(current.lesson) || 0),
+      stage: Math.max(0, Math.min(JOURNEY_STAGE_COUNT - 1, Number(current.stage) || 0)),
+      startedOn: typeof current.startedOn === 'string' ? current.startedOn : getLocalDayKey(),
+      history,
+    };
+  }
+
+  return migrated;
+}
+
+function normalizeVocabLoopStats(value: unknown): VocabLoopStats {
+  if (!value || typeof value !== 'object') return defaultVocabLoopStats;
+  const saved = value as Partial<VocabLoopStats>;
+  return {
+    cycle: Math.max(1, Number(saved.cycle) || 1),
+    sessions: Math.max(0, Number(saved.sessions) || 0),
+    completedTopics: Array.isArray(saved.completedTopics) ? saved.completedTopics.filter((item: unknown) => Number.isInteger(item)) : [],
+    mistakeWords: Array.isArray(saved.mistakeWords) ? saved.mistakeWords.filter((item: unknown) => typeof item === 'string') : [],
+    lastCompletedDate: typeof saved.lastCompletedDate === 'string' ? saved.lastCompletedDate : '',
+  };
+}
+
+function normalizeVocabLoopByLevel(value: unknown): VocabLoopByLevel {
+  if (!value || typeof value !== 'object') return {};
+
+  const saved = value as Partial<Record<CEFRLevel, unknown>>;
+  const next: VocabLoopByLevel = {};
+  for (const level of cefrLevels) {
+    if (saved[level]) next[level] = normalizeVocabLoopStats(saved[level]);
+  }
+  return next;
+}
+
+function hasSavedProgress(value: LearningProgress) {
+  return Object.values(value).some(level => level && (level.lesson > 0 || Object.keys(level.history || {}).length > 0));
+}
+
 const cefrInfo: Record<CEFRLevel, { zh: string; pt: string }> = {
   A1: { zh: '基础生存表达 · 熟悉词汇和短句', pt: 'Sobrevivência · palavras e frases curtas' },
   A2: { zh: '日常沟通 · 简单叙述和具体信息', pt: 'Rotina · descrições simples e concretas' },
@@ -456,6 +516,9 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const [writingText, setWritingText] = useState('');
   const [writingEvaluated, setWritingEvaluated] = useState(false);
   const [learningProgress, setLearningProgress] = useState<LearningProgress>({});
+  const [vocabLoopByLevel, setVocabLoopByLevel] = useState<VocabLoopByLevel>({});
+  const [remoteUser, setRemoteUser] = useState<RemoteUser|null>(null);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatus>('checking');
   const [profileMonthIndex, setProfileMonthIndex] = useState(() => {
     const today = new Date();
     const monthIndex = (today.getFullYear() - 2026) * 12 + today.getMonth() - 5;
@@ -618,6 +681,26 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     level: 'Nível atual',
     next: 'Próximo',
   };
+  const accountSyncUi = language === 'zh'
+    ? {
+      checking: ['账号同步', '正在检查登录状态…'],
+      guest: ['本地试用中', '登录后可把学习记录保存到你的账号，换设备也能继续。'],
+      ready: ['已同步到账号', remoteUser?.email || '当前登录用户'],
+      saving: ['正在保存', '你的学习进度正在同步到云端。'],
+      error: ['同步暂不可用', '当前会继续保存在本机，稍后会再尝试同步。'],
+      action: '登录同步',
+      signOut: '退出登录',
+    }
+    : {
+      checking: ['Sincronização', 'Verificando login…'],
+      guest: ['Modo local', 'Entre para salvar seu progresso na conta.'],
+      ready: ['Sincronizado', remoteUser?.email || 'Usuário atual'],
+      saving: ['Salvando', 'Seu progresso está sendo sincronizado.'],
+      error: ['Sincronização indisponível', 'O progresso continua salvo neste dispositivo.'],
+      action: 'Entrar',
+      signOut: 'Sair',
+    };
+  const accountSyncMessage = accountSyncUi[cloudSyncStatus];
   const profileCalendarMonths = Array.from({ length: 14 }, (_, monthOffset) => {
     const date = new Date(2026, 5 + monthOffset, 1);
     const month = date.getMonth();
@@ -640,6 +723,59 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     { mode: 'speaking', icon: '◉', title: skillUi.speaking, meta: skillUi.speakingMeta },
   ];
 
+  function readLocalLearningProgress() {
+    try {
+      return normalizeLearningProgress(JSON.parse(localStorage.getItem('fala-learning-progress') || '{}'));
+    } catch {
+      return {};
+    }
+  }
+
+  function readLocalVocabLoops() {
+    const loops: VocabLoopByLevel = {};
+    for (const level of cefrLevels) {
+      try {
+        const saved = localStorage.getItem(`fala-vocab-loop-${level}`);
+        if (saved) loops[level] = normalizeVocabLoopStats(JSON.parse(saved));
+      } catch {}
+    }
+    return loops;
+  }
+
+  function mirrorUserStateToLocalStorage(level: CEFRLevel, progress: LearningProgress, loops: VocabLoopByLevel) {
+    localStorage.setItem('fala-cefr-level', level);
+    localStorage.setItem('fala-learning-progress', JSON.stringify(progress));
+    for (const cefrLevel of cefrLevels) {
+      const loop = loops[cefrLevel];
+      if (loop) localStorage.setItem(`fala-vocab-loop-${cefrLevel}`, JSON.stringify(loop));
+    }
+  }
+
+  async function saveCloudState(overrides: Partial<{ selectedLevel: CEFRLevel; learningProgress: LearningProgress; vocabLoop: VocabLoopByLevel }> = {}) {
+    if (!remoteUser) return;
+
+    const nextLevel = overrides.selectedLevel || selectedLevel;
+    const nextProgress = overrides.learningProgress || learningProgress;
+    const nextVocabLoop = overrides.vocabLoop || vocabLoopByLevel;
+
+    try {
+      setCloudSyncStatus('saving');
+      const response = await fetch('/api/user-state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selectedLevel: nextLevel,
+          learningProgress: nextProgress,
+          vocabLoop: nextVocabLoop,
+        }),
+      });
+      if (!response.ok) throw new Error('Unable to save user state');
+      setCloudSyncStatus('ready');
+    } catch {
+      setCloudSyncStatus('error');
+    }
+  }
+
   useEffect(() => {
     if (localStorage.getItem('fala-vocab-content-version') === VOCAB_CONTENT_VERSION) return;
     const stalePrefixes = ['fala-vocab-session-', 'fala-checkin-', 'fala-vocab-next-deck', 'fala-vocab-loop'];
@@ -651,26 +787,73 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   }, []);
 
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('fala-learning-progress') || '{}');
-      if (saved && typeof saved === 'object') {
-        const migrated = { ...saved } as LearningProgress;
-        for (const level of cefrLevels) {
-          const current = migrated[level];
-          if (!current) continue;
-          const history = Object.fromEntries(Object.entries(current.history || {}).map(([date, record]) => [date, {
-            ...record,
-            completedStages: record.completed || record.completedStages >= journeyStages.length ? journeyStages.length : Math.min(record.completedStages, journeyStages.length),
-            completed: record.completed || record.completedStages >= journeyStages.length,
-          }]));
-          migrated[level] = { ...current, stage: Math.min(current.stage, journeyStages.length - 1), history };
+    const localProgress = readLocalLearningProgress();
+    const localLoops = readLocalVocabLoops();
+    setLearningProgress(localProgress);
+    setVocabLoopByLevel(localLoops);
+    localStorage.setItem('fala-learning-progress', JSON.stringify(localProgress));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRemoteState() {
+      try {
+        const response = await fetch('/api/user-state', { cache: 'no-store' });
+        if (!response.ok) throw new Error('Unable to load user state');
+        const payload = await response.json() as {
+          authenticated?: boolean;
+          user?: RemoteUser;
+          state?: {
+            selectedLevel?: unknown;
+            learningProgress?: unknown;
+            vocabLoop?: unknown;
+          };
+        };
+        if (cancelled) return;
+
+        if (!payload.authenticated || !payload.user) {
+          setRemoteUser(null);
+          setCloudSyncStatus('guest');
+          return;
         }
-        localStorage.setItem('fala-learning-progress', JSON.stringify(migrated));
-        setLearningProgress(migrated);
+
+        const user = payload.user;
+        const remoteProgress = normalizeLearningProgress(payload.state?.learningProgress);
+        const remoteLoops = normalizeVocabLoopByLevel(payload.state?.vocabLoop);
+        const remoteLevelValue = payload.state?.selectedLevel;
+        const remoteLevel = cefrLevels.includes(remoteLevelValue as CEFRLevel) ? remoteLevelValue as CEFRLevel : selectedLevel;
+        const localProgress = readLocalLearningProgress();
+        const localLoops = readLocalVocabLoops();
+        const shouldMigrateLocal = !hasSavedProgress(remoteProgress) && hasSavedProgress(localProgress);
+        const nextProgress = shouldMigrateLocal ? localProgress : remoteProgress;
+        const nextLoops = shouldMigrateLocal ? localLoops : remoteLoops;
+        const nextLevel = shouldMigrateLocal ? (localStorage.getItem('fala-cefr-level') as CEFRLevel || remoteLevel) : remoteLevel;
+
+        setRemoteUser(user);
+        setSelectedLevel(cefrLevels.includes(nextLevel) ? nextLevel : remoteLevel);
+        setLearningProgress(nextProgress);
+        setVocabLoopByLevel(nextLoops);
+        setVocabLoopStats(nextLoops[nextLevel] || defaultVocabLoopStats);
+        mirrorUserStateToLocalStorage(nextLevel, nextProgress, nextLoops);
+        setCloudSyncStatus('ready');
+
+        if (shouldMigrateLocal) {
+          void fetch('/api/user-state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ selectedLevel: nextLevel, learningProgress: nextProgress, vocabLoop: nextLoops }),
+          }).then(response => {
+            if (!response.ok) throw new Error('Unable to migrate local state');
+          }).catch(() => setCloudSyncStatus('error'));
+        }
+      } catch {
+        if (!cancelled) setCloudSyncStatus('error');
       }
-    } catch {
-      setLearningProgress({});
     }
+
+    void loadRemoteState();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -679,19 +862,16 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     if (activeLevel !== selectedLevel) setSelectedLevel(activeLevel);
 
     setCheckedIn(localStorage.getItem(`fala-checkin-${dayKey}-${selectedLevel}`) === 'done');
-    try {
-      const savedLoop = JSON.parse(localStorage.getItem(`fala-vocab-loop-${selectedLevel}`) || localStorage.getItem('fala-vocab-loop') || 'null');
-      if (savedLoop) {
-        setVocabLoopStats({
-          cycle: Math.max(1, Number(savedLoop.cycle) || 1),
-          sessions: Math.max(0, Number(savedLoop.sessions) || 0),
-          completedTopics: Array.isArray(savedLoop.completedTopics) ? savedLoop.completedTopics.filter((item: unknown) => Number.isInteger(item)) : [],
-          mistakeWords: Array.isArray(savedLoop.mistakeWords) ? savedLoop.mistakeWords.filter((item: unknown) => typeof item === 'string') : [],
-          lastCompletedDate: typeof savedLoop.lastCompletedDate === 'string' ? savedLoop.lastCompletedDate : '',
-        });
+    const cloudLoop = vocabLoopByLevel[selectedLevel];
+    if (cloudLoop) {
+      setVocabLoopStats(cloudLoop);
+    } else {
+      try {
+        const savedLoop = JSON.parse(localStorage.getItem(`fala-vocab-loop-${selectedLevel}`) || localStorage.getItem('fala-vocab-loop') || 'null');
+        setVocabLoopStats(savedLoop ? normalizeVocabLoopStats(savedLoop) : defaultVocabLoopStats);
+      } catch {
+        setVocabLoopStats(defaultVocabLoopStats);
       }
-    } catch {
-      setVocabLoopStats(defaultVocabLoopStats);
     }
     try {
       const savedVocab = JSON.parse(localStorage.getItem(`fala-vocab-session-${dayKey}-${selectedLevel}`) || 'null');
@@ -750,11 +930,12 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       setVerbComplete(false);
       setVerbMistakes([]);
     }
-  }, [dayKey, selectedLevel]);
+  }, [dayKey, selectedLevel, vocabLoopByLevel]);
 
   function chooseLevel(level: CEFRLevel) {
     setSelectedLevel(level);
     localStorage.setItem('fala-cefr-level', level);
+    void saveCloudState({ selectedLevel: level });
     setComprehensionAnswer(null);
     setWritingText('');
     setWritingEvaluated(false);
@@ -765,6 +946,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   function saveLearningProgress(next: LearningProgress) {
     setLearningProgress(next);
     localStorage.setItem('fala-learning-progress', JSON.stringify(next));
+    void saveCloudState({ learningProgress: next });
   }
 
   function completeJourneyStage(stageIndex: number) {
@@ -781,6 +963,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       };
       const next = { ...previous, [selectedLevel]: updated };
       localStorage.setItem('fala-learning-progress', JSON.stringify(next));
+      void saveCloudState({ learningProgress: next });
       return next;
     });
   }
@@ -843,7 +1026,10 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
 
   function saveVocabLoopStats(nextStats: VocabLoopStats) {
     setVocabLoopStats(nextStats);
+    const nextLoopByLevel = { ...vocabLoopByLevel, [selectedLevel]: nextStats };
+    setVocabLoopByLevel(nextLoopByLevel);
     localStorage.setItem(`fala-vocab-loop-${selectedLevel}`, JSON.stringify(nextStats));
+    void saveCloudState({ vocabLoop: nextLoopByLevel });
   }
 
   function recordVocabMistake(word: string) {
@@ -1059,6 +1245,11 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
 
   if (mode === 'profile') return <div className="screen-enter min-h-[790px] px-6 pb-28 pt-7">
     <header className="profile-header"><div><p className="eyebrow">{profileUi.nickname}</p><h1>{profileNickname}</h1><small>{profileUi.subtitle}</small></div><span>{selectedLevel}</span></header>
+    <section className={`account-sync mt-4 ${cloudSyncStatus}`}>
+      <div><strong>{accountSyncMessage[0]}</strong><span>{accountSyncMessage[1]}</span></div>
+      {cloudSyncStatus === 'guest' && <a href="/signin-with-chatgpt?return_to=/" target="_top">{accountSyncUi.action}</a>}
+      {cloudSyncStatus === 'ready' && <a href="/signout-with-chatgpt?return_to=/" target="_top">{accountSyncUi.signOut}</a>}
+    </section>
     <section className="profile-overview mt-6">
       <article><small>{profileUi.streak}</small><strong>{profileStreakDays}</strong><span>{language==='zh'?'天':'dias'}</span></article>
       <article><small>{profileUi.totalDays}</small><strong>{completedDayKeys.size}</strong><span>{language==='zh'?'天':'dias'}</span></article>
@@ -1125,7 +1316,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       </div>
       {activeMistakeWords.length > 0 && <p className="vocab-mistake-note">{loopUi.mistakes}: {activeMistakeWords.join(' · ')}</p>}
       <div className="vocab-session-route">
-        <div className={vocabPhase === 'learn' ? 'active' : vocabPhase !== 'learn' ? 'done' : ''}><b>1</b><span>{ui.learnPhase}<small>{ui.learnTime}</small></span></div>
+        <div className={vocabPhase === 'learn' ? 'active' : 'done'}><b>1</b><span>{ui.learnPhase}<small>{ui.learnTime}</small></span></div>
         <div className={vocabPhase === 'quiz' ? 'active' : ['review','done'].includes(vocabPhase) ? 'done' : ''}><b>2</b><span>{ui.quizPhase}<small>{ui.quizTime}</small></span></div>
         <div className={vocabPhase === 'review' ? 'active' : vocabPhase === 'done' ? 'done' : ''}><b>3</b><span>{ui.reviewPhase}<small>{ui.reviewTime}</small></span></div>
       </div>
