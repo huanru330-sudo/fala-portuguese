@@ -1059,24 +1059,32 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         <button className="tomorrow-button" onClick={restartVocabReview}>{ui.reviewAgain}</button>
       </div>}
     </section>}
-    {mode === 'verbs' && <section className="study-panel verb-reference mt-8 rounded-[28px] p-6">
+    {mode === 'verbs' && <section className="study-panel verb-reference mt-8 rounded-[28px] p-5">
       <div className="verb-reference-hero">
         <p className="eyebrow">{language === 'zh' ? '知识巩固' : 'Revisão gramatical'}</p>
         <h1>{language === 'zh' ? '常见时态变位速查' : 'Conjugação essencial'}</h1>
-        <p>{language === 'zh' ? '先看规则动词 -ar / -er / -ir，再看高频不规则动词。每组都配一个自然例句，可直接听发音。' : 'Revise verbos regulares em -ar, -er, -ir e formas irregulares frequentes, sempre com frase-modelo.'}</p>
+        <p>{language === 'zh' ? '规则动词和高频不规则动词整理成速查清单，直接看词形和例句。' : 'Lista rápida de verbos regulares e irregulares, com formas e exemplos.'}</p>
       </div>
       <div className="verb-reference-section">
         <h2>{language === 'zh' ? '规则动词变位' : 'Verbos regulares'}</h2>
-        {regularConjugationTables.map(table => <article key={table.verb} className="verb-table-card">
-          <div className="verb-table-title"><span>{table.ending}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong><small>{table.verb}</small></div>
-          <div className="verb-table-scroll"><table><thead><tr><th>{language === 'zh' ? '时态' : 'Tempo'}</th>{pronouns.map(pronoun => <th key={pronoun}>{pronoun}</th>)}</tr></thead><tbody>{table.rows.map(row => <tr key={`${table.verb}-${row.tenseZh}`}><td><b>{language === 'zh' ? row.tenseZh : row.tensePt}</b><button type="button" onClick={() => playPortuguese(row.example)}>▶</button><small>{row.example}</small></td>{row.forms.map((form, index) => <td key={`${form}-${index}`}>{form}</td>)}</tr>)}</tbody></table></div>
+        {regularConjugationTables.map(table => <article key={table.verb} className="verb-list-card">
+          <div className="verb-list-title"><span>{table.ending}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong><small>{table.verb}</small></div>
+          <div className="verb-list-rows">{table.rows.map(row => <div key={`${table.verb}-${row.tenseZh}`} className="verb-list-row">
+            <b>{language === 'zh' ? row.tenseZh : row.tensePt}</b>
+            <p>{row.forms.map((form, index) => <span key={`${form}-${index}`}><em>{pronouns[index]}</em>{form}</span>)}</p>
+            <button type="button" onClick={() => playPortuguese(row.example)}>▶ {row.example}</button>
+          </div>)}</div>
         </article>)}
       </div>
       <div className="verb-reference-section">
         <h2>{language === 'zh' ? '高频不规则变位' : 'Irregulares frequentes'}</h2>
-        {irregularConjugationTables.map(table => <article key={table.verb} className="verb-table-card irregular">
-          <div className="verb-table-title"><span>{table.verb}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong><small>{language === 'zh' ? '常见形式' : 'formas essenciais'}</small></div>
-          <div className="verb-table-scroll"><table><thead><tr><th>{language === 'zh' ? '时态' : 'Tempo'}</th>{pronouns.map(pronoun => <th key={pronoun}>{pronoun}</th>)}</tr></thead><tbody>{table.rows.map(row => <tr key={`${table.verb}-${row.tenseZh}`}><td><b>{language === 'zh' ? row.tenseZh : row.tensePt}</b><button type="button" onClick={() => playPortuguese(row.example)}>▶</button><small>{row.example}</small></td>{row.forms.map((form, index) => <td key={`${form}-${index}`}>{form}</td>)}</tr>)}</tbody></table></div>
+        {irregularConjugationTables.map(table => <article key={table.verb} className="verb-list-card irregular">
+          <div className="verb-list-title"><span>{table.verb}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong><small>{language === 'zh' ? '常见形式' : 'formas essenciais'}</small></div>
+          <div className="verb-list-rows">{table.rows.map(row => <div key={`${table.verb}-${row.tenseZh}`} className="verb-list-row">
+            <b>{language === 'zh' ? row.tenseZh : row.tensePt}</b>
+            <p>{row.forms.map((form, index) => <span key={`${form}-${index}`}><em>{pronouns[index]}</em>{form}</span>)}</p>
+            <button type="button" onClick={() => playPortuguese(row.example)}>▶ {row.example}</button>
+          </div>)}</div>
         </article>)}
       </div>
     </section>}
