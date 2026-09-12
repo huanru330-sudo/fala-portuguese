@@ -94,7 +94,7 @@ function ReviewScreen({ c, playing, mastered, onPlay, onMaster, onHome, onPracti
   return <div className="screen-enter min-h-[790px] px-6 pb-28 pt-7"><TopBar c={c} title={c.review} onBack={onHome} action="1 / 3"/><section className="mt-7 text-center"><p className="eyebrow">{c.reviewToday}</p><h1 className="mt-2 text-2xl font-black">{c.natural}</h1><p className="mt-2 text-sm text-[#18352f]/55">{c.reviewTip}</p></section><article className="mt-8 rounded-[28px] border border-[#18352f]/10 bg-white p-6"><span className="rounded-full bg-[#f8e9df] px-3 py-1 text-xs font-black text-[#b54e2d]">{chinese?'性数配合':'Concordância'}</span><div className="mt-6 border-b border-[#18352f]/10 pb-5"><p className="text-xs font-bold text-[#18352f]/40">{c.youSaid}</p><p className="mt-1 text-lg text-[#18352f]/45 line-through">As cidade são bonito.</p></div><div className="pt-5"><p className="text-xs font-bold text-[#2f6b57]">{c.recommended}</p><p className="mt-1 text-2xl font-black leading-relaxed">As <span className="rounded bg-[#e8f1ec] px-1 text-[#2f6b57]">cidades</span> são <span className="rounded bg-[#e8f1ec] px-1 text-[#2f6b57]">bonitas</span>.</p><p className="mt-2 text-sm text-[#18352f]/55">{chinese?'这些城市很美。':'Estas cidades são bonitas.'}</p></div><button onClick={onPlay} className={`mt-6 flex w-full items-center justify-center gap-3 rounded-2xl py-4 text-sm font-black ${playing?'bg-[#f2ca88]':'bg-[#18352f] text-white'}`}><span>{playing?'◼':'▶'}</span>{playing?c.playing:c.listen}</button></article><section className="mt-6 rounded-[24px] bg-[#e8f1ec] p-5 text-center"><p className="text-sm font-bold">{c.turn}</p><p className="mt-1 text-xs text-[#18352f]/50">{c.recordTip}</p><button className="record-button small mx-auto mt-4" aria-label={c.startRec}><span>●</span></button></section><button onClick={onMaster} className={`mt-6 w-full rounded-2xl border py-4 text-sm font-black transition ${mastered?'border-[#2f6b57] bg-[#2f6b57] text-white':'border-[#18352f]/15 bg-white'}`}>{mastered?c.mastered:c.mark}</button><Nav c={c} active="review" onPractice={onPractice}/></div>;
 }
 
-type PracticeMode = 'level-select' | 'hub' | 'vocab' | 'verbs' | 'gender' | 'skills' | 'listening' | 'speaking' | 'reading' | 'writing';
+type PracticeMode = 'level-select' | 'hub' | 'vocab' | 'verbs' | 'gender' | 'skills' | 'listening' | 'speaking' | 'reading' | 'writing' | 'profile';
 type VocabPhase = 'learn' | 'quiz' | 'review' | 'done';
 type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 type VocabLoopStats = {
@@ -549,6 +549,53 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     afterAll: 'Depois das lições deste nível, o app entra automaticamente no próximo ciclo.',
     nextCycle: 'Próximo ciclo',
   };
+  const completedDayKeys = new Set(Object.values(learningProgress).flatMap(progress => Object.entries(progress?.history || {}).filter(([, record]) => record.completed).map(([date]) => date)));
+  const activeCompletedDays = Object.values(activeLearningProgress.history).filter(record => record.completed).length;
+  const currentLevelProgress = levelDeckIndices.length ? Math.min(100, Math.round((activeLearningProgress.lesson / levelDeckIndices.length) * 100)) : 0;
+  const monthlyCompletionRate = Math.min(100, Math.round((completedDayKeys.size / 30) * 100));
+  const profileUi = language === 'zh' ? {
+    title: '我的学习',
+    subtitle: '今天的状态、等级进度和词汇掌握都放在这里。',
+    streak: '连续学习',
+    totalDays: '累计学习',
+    todayDone: '今日状态',
+    done: '已完成',
+    pending: '未完成',
+    levelProgress: '等级进度',
+    currentLesson: '当前课程',
+    learnedWords: '已学词汇',
+    reviewWords: '待复习词',
+    monthRate: '本月完成率',
+    vocabulary: '词汇掌握',
+    practice: '练习记录',
+    settings: '设置',
+    dailyGoal: '每日目标',
+    display: '显示语言',
+    voice: '发音服务',
+    connected: 'Azure TTS 已连接',
+    next: '下一步',
+  } : {
+    title: 'Meu perfil',
+    subtitle: 'Seu estado de hoje, progresso do nível e vocabulário.',
+    streak: 'Sequência',
+    totalDays: 'Dias no total',
+    todayDone: 'Hoje',
+    done: 'Concluído',
+    pending: 'Pendente',
+    levelProgress: 'Progresso do nível',
+    currentLesson: 'Lição atual',
+    learnedWords: 'Palavras estudadas',
+    reviewWords: 'Para revisar',
+    monthRate: 'Mês concluído',
+    vocabulary: 'Vocabulário',
+    practice: 'Registros',
+    settings: 'Configurações',
+    dailyGoal: 'Meta diária',
+    display: 'Idioma',
+    voice: 'Voz',
+    connected: 'Azure TTS conectado',
+    next: 'Próximo',
+  };
   const journeyStages: Array<{ mode: PracticeMode; icon: string; title: string; meta: string }> = [
     { mode: 'vocab', icon: 'Aa', title: language==='zh'?`${selectedLevel} 词汇热身`:`Vocabulário ${selectedLevel}`, meta: language==='zh'?'词义、例句与词形':'Significado, frase e forma' },
     { mode: 'listening', icon: '◖))', title: skillUi.listening, meta: skillUi.listeningMeta },
@@ -970,7 +1017,40 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     <section className="journey-status mt-6"><div><span>{language==='zh'?'今日闯关进度':'Progresso de hoje'}</span><b>{todayLearningRecord?.completedStages || 0}/{journeyStages.length}</b></div><div><span style={{width:`${Math.max(5, ((todayLearningRecord?.completedStages || 0) / journeyStages.length) * 100)}%`}}/></div><small>{todayLearningRecord?.completed?(language==='zh'?'今天的任务已完成；四关均可点击复习，明天自动进入下一课。':'Tarefa concluída. Você pode rever qualquer fase; amanhã continuará na próxima lição.'):(language==='zh'?'完成一关自动解锁下一关；已完成关卡可以返回复习且不重复计入进度。':'Conclua uma fase para liberar a próxima. Fases concluídas podem ser revistas sem duplicar o progresso.')}</small></section>
     <section className="learning-history mt-4"><div className="learning-history-title"><strong>{language==='zh'?'最近7天':'Últimos 7 dias'}</strong><small>{language==='zh'?'完成 · 学习中 · 未学习':'Concluído · Em curso · Sem estudo'}</small></div><div className="learning-history-days">{recentLearningDays.map(item=><div key={item.key} className={item.beforeStart?'future':item.record?.completed?'done':item.record?'partial':'missed'}><span>{item.day}</span><b>{item.record?.completed?'✓':item.record?item.record.completedStages:'·'}</b><small>{item.date}</small></div>)}</div></section>
     <div className="journey-map mt-7">{journeyStages.map((stage,index)=>{const completed=(todayLearningRecord?.completedStages||0)>index; const locked=!todayLearningRecord?.completed&&index>activeLearningProgress.stage; const current=!todayLearningRecord?.completed&&index===activeLearningProgress.stage; return <div key={stage.mode} className={`journey-node node-${index+1} ${completed?'complete':''} ${locked?'locked':''} ${current?'current':''}`}><button disabled={locked} onClick={()=>openJourneyStage(index,stage.mode)}><span>{completed?'✓':locked?'🔒':stage.icon}</span><b>{index+1}</b></button><div><small>{completed?(language==='zh'?'已完成 · 点击复习':'Concluído · Rever'):locked?(language==='zh'?'完成上一关解锁':'Complete a fase anterior'):(language==='zh'?`当前 · 第 ${index+1} 关`:`Atual · Fase ${index+1}`)}</small><strong>{stage.title}</strong><p>{stage.meta}</p></div></div>})}</div>
-    <Nav c={c} active="practice" onPractice={()=>setMode('hub')} onVerbs={()=>setMode('verbs')}/>
+    <Nav c={c} active="practice" onPractice={()=>setMode('hub')} onVerbs={()=>setMode('verbs')} onProfile={()=>setMode('profile')}/>
+  </div>;
+
+  if (mode === 'profile') return <div className="screen-enter min-h-[790px] px-6 pb-28 pt-7">
+    <header className="profile-header"><div><p className="eyebrow">Fala Português</p><h1>{profileUi.title}</h1><small>{profileUi.subtitle}</small></div><span>{selectedLevel}</span></header>
+    <section className="profile-overview mt-6">
+      <article><small>{profileUi.streak}</small><strong>{activeCompletedDays || Object.values(activeLearningProgress.history).length || 1}</strong><span>{language==='zh'?'天':'dias'}</span></article>
+      <article><small>{profileUi.totalDays}</small><strong>{completedDayKeys.size || activeCompletedDays || 1}</strong><span>{language==='zh'?'天':'dias'}</span></article>
+      <article className={todayLearningRecord?.completed?'done':''}><small>{profileUi.todayDone}</small><strong>{todayLearningRecord?.completed?'✓':(todayLearningRecord?.completedStages || 0)}</strong><span>{todayLearningRecord?.completed?profileUi.done:profileUi.pending}</span></article>
+    </section>
+    <section className="profile-card mt-4">
+      <div className="profile-card-title"><strong>{profileUi.levelProgress}</strong><span>{currentLevelProgress}%</span></div>
+      <div className="profile-progress"><span style={{width:`${Math.max(6,currentLevelProgress)}%`}}/></div>
+      <div className="profile-metrics">
+        <span><b>{selectedLevel} · {activeLearningProgress.lesson + 1}/{levelDeckIndices.length}</b><small>{profileUi.currentLesson}</small></span>
+        <span><b>{learnedWordEstimate}</b><small>{profileUi.learnedWords}</small></span>
+        <span><b>{monthlyCompletionRate}%</b><small>{profileUi.monthRate}</small></span>
+      </div>
+    </section>
+    <section className="profile-week mt-4">
+      <div className="profile-card-title"><strong>{language==='zh'?'最近 7 天':'Últimos 7 dias'}</strong><span>{activeCompletedDays}/{Object.keys(activeLearningProgress.history).length || 7}</span></div>
+      <div className="profile-week-days">{recentLearningDays.map(item=><div key={item.key} className={item.record?.completed?'done':item.record?'partial':'missed'}><span>{item.day}</span><b>{item.record?.completed?'✓':item.record?.completedStages || '·'}</b></div>)}</div>
+    </section>
+    <section className="profile-two-col mt-4">
+      <article className="profile-card compact"><div className="profile-card-title"><strong>{profileUi.vocabulary}</strong><span>{vocabLoopStats.cycle}</span></div><p><b>{learnedWordEstimate}</b>{profileUi.learnedWords}</p><p><b>{activeMistakeWords.length}</b>{profileUi.reviewWords}</p></article>
+      <article className="profile-card compact"><div className="profile-card-title"><strong>{profileUi.practice}</strong><span>{profileUi.next}</span></div><p><b>{Object.values(activeLearningProgress.history).filter(record=>record.completedStages>=2).length}</b>{skillUi.listening}</p><p><b>{Object.values(activeLearningProgress.history).filter(record=>record.completedStages>=4).length}</b>{skillUi.speaking}</p></article>
+    </section>
+    <section className="profile-settings mt-4">
+      <h2>{profileUi.settings}</h2>
+      <div><span>{profileUi.dailyGoal}</span><strong>10 {language==='zh'?'词 / 天':'palavras/dia'}</strong></div>
+      <div><span>{profileUi.display}</span><strong>{language==='zh'?'中文':'Português'}</strong></div>
+      <div><span>{profileUi.voice}</span><strong>{profileUi.connected}</strong></div>
+    </section>
+    <Nav c={c} active="profile" onPractice={()=>setMode('hub')} onVerbs={()=>setMode('verbs')} onProfile={()=>setMode('profile')}/>
   </div>;
 
   if (mode === 'skills') return <div className="screen-enter min-h-[790px] px-6 pb-8 pt-7">
@@ -1155,4 +1235,4 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
 
 function TopBar({ c, title, onBack, action }: { c: Copy; title: string; onBack: () => void; action?: string }) { return <header className="grid grid-cols-[44px_1fr_44px] items-center"><button onClick={onBack} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8f1ec] text-lg font-black" aria-label={c.back}>←</button><h1 className="text-center text-base font-black">{title}</h1><span className="text-right text-xs font-bold text-[#18352f]/45">{action}</span></header>; }
 
-function Nav({ c, active, onPractice, onVerbs }: { c: Copy; active: 'practice'|'verbs'|'profile'; onPractice: () => void; onVerbs: () => void }) { return <nav className="absolute-nav flex items-center justify-around" aria-label={c.navigation}><button onClick={onPractice} className={active==='practice'?'nav-active':''}>◉<span>{c.nav[1]}</span></button><button onClick={onVerbs} className={active==='verbs'?'nav-active':''}>V<span>{c === text.zh ? '巩固' : 'Revisão'}</span></button><button className={active==='profile'?'nav-active':''}>◎<span>{c.nav[3]}</span></button></nav>; }
+function Nav({ c, active, onPractice, onVerbs = onPractice, onProfile = onPractice }: { c: Copy; active: 'practice'|'verbs'|'profile'|'review'; onPractice: () => void; onVerbs?: () => void; onProfile?: () => void }) { return <nav className="absolute-nav flex items-center justify-around" aria-label={c.navigation}><button onClick={onPractice} className={active==='practice'?'nav-active':''}>◉<span>{c.nav[1]}</span></button><button onClick={onVerbs} className={active==='verbs'?'nav-active':''}>V<span>{c === text.zh ? '巩固' : 'Revisão'}</span></button><button onClick={onProfile} className={active==='profile'?'nav-active':''}>◎<span>{c.nav[3]}</span></button></nav>; }
