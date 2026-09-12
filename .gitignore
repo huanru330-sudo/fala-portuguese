@@ -37,4 +37,6 @@ next-env.d.ts
 /outputs/
 /work/
 /.site-package-stage/
+/.site-package-stage-*/
 /site-version.tar.gz
+/site-version-*.tar.gz
