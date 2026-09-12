@@ -251,6 +251,113 @@ const verbQuestions = [
   { tenseZh: '虚拟式 · 将来', tensePt: 'Subjuntivo · futuro', infinitive: 'ter', subject: 'eu', sentence: 'Quando eu ___ tempo, vou estudar português.', accepted: [{ form: 'tiver', zh: 'ter 的将来虚拟式 eu 形式是 tiver。', pt: 'O futuro do subjuntivo de ter com eu é tiver.' }] },
 ];
 
+const pronouns = ['eu', 'você/ele/ela', 'nós', 'vocês/eles/elas'];
+
+const regularConjugationTables = [
+  {
+    ending: '-ar',
+    verb: 'falar',
+    titleZh: '-ar 规则动词',
+    titlePt: 'Verbos regulares em -ar',
+    rows: [
+      { tenseZh: '现在时', tensePt: 'Presente', forms: ['falo', 'fala', 'falamos', 'falam'], example: 'Eu falo português todos os dias.' },
+      { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['falei', 'falou', 'falamos', 'falaram'], example: 'Ontem falei com a professora.' },
+      { tenseZh: '未完成过去时', tensePt: 'Pretérito imperfeito', forms: ['falava', 'falava', 'falávamos', 'falavam'], example: 'Antes, eu falava pouco em público.' },
+      { tenseZh: '将来时', tensePt: 'Futuro', forms: ['falarei', 'falará', 'falaremos', 'falarão'], example: 'Amanhã falaremos sobre viagens.' },
+      { tenseZh: '条件式', tensePt: 'Condicional', forms: ['falaria', 'falaria', 'falaríamos', 'falariam'], example: 'Eu falaria mais devagar se fosse preciso.' },
+    ],
+  },
+  {
+    ending: '-er',
+    verb: 'comer',
+    titleZh: '-er 规则动词',
+    titlePt: 'Verbos regulares em -er',
+    rows: [
+      { tenseZh: '现在时', tensePt: 'Presente', forms: ['como', 'come', 'comemos', 'comem'], example: 'Nós comemos em casa hoje.' },
+      { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['comi', 'comeu', 'comemos', 'comeram'], example: 'Ontem comi peixe no almoço.' },
+      { tenseZh: '未完成过去时', tensePt: 'Pretérito imperfeito', forms: ['comia', 'comia', 'comíamos', 'comiam'], example: 'Quando era criança, eu comia cedo.' },
+      { tenseZh: '将来时', tensePt: 'Futuro', forms: ['comerei', 'comerá', 'comeremos', 'comerão'], example: 'No sábado comeremos fora.' },
+      { tenseZh: '条件式', tensePt: 'Condicional', forms: ['comeria', 'comeria', 'comeríamos', 'comeriam'], example: 'Eu comeria mais se não estivesse cansado.' },
+    ],
+  },
+  {
+    ending: '-ir',
+    verb: 'abrir',
+    titleZh: '-ir 规则动词',
+    titlePt: 'Verbos regulares em -ir',
+    rows: [
+      { tenseZh: '现在时', tensePt: 'Presente', forms: ['abro', 'abre', 'abrimos', 'abrem'], example: 'A loja abre às nove.' },
+      { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['abri', 'abriu', 'abrimos', 'abriram'], example: 'Eu abri a janela de manhã.' },
+      { tenseZh: '未完成过去时', tensePt: 'Pretérito imperfeito', forms: ['abria', 'abria', 'abríamos', 'abriam'], example: 'Antes, eles abriam a loja cedo.' },
+      { tenseZh: '将来时', tensePt: 'Futuro', forms: ['abrirei', 'abrirá', 'abriremos', 'abrirão'], example: 'Abriremos uma nova turma em breve.' },
+      { tenseZh: '条件式', tensePt: 'Condicional', forms: ['abriria', 'abriria', 'abriríamos', 'abririam'], example: 'Eu abriria uma exceção neste caso.' },
+    ],
+  },
+];
+
+const irregularConjugationTables = [
+  {
+    verb: 'ser',
+    titleZh: 'ser · 是/成为',
+    titlePt: 'ser · ser/estar em essência',
+    rows: [
+      { tenseZh: '现在时', tensePt: 'Presente', forms: ['sou', 'é', 'somos', 'são'], example: 'Nós somos estudantes.' },
+      { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['fui', 'foi', 'fomos', 'foram'], example: 'A reunião foi útil.' },
+      { tenseZh: '未完成过去时', tensePt: 'Pretérito imperfeito', forms: ['era', 'era', 'éramos', 'eram'], example: 'Antes, ela era tímida.' },
+    ],
+  },
+  {
+    verb: 'estar',
+    titleZh: 'estar · 处于/在',
+    titlePt: 'estar · estado/localização',
+    rows: [
+      { tenseZh: '现在时', tensePt: 'Presente', forms: ['estou', 'está', 'estamos', 'estão'], example: 'Estou pronto para começar.' },
+      { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['estive', 'esteve', 'estivemos', 'estiveram'], example: 'Estive em São Paulo ontem.' },
+      { tenseZh: '过去虚拟式', tensePt: 'Imperfeito do subjuntivo', forms: ['estivesse', 'estivesse', 'estivéssemos', 'estivessem'], example: 'Se ela estivesse aqui, ajudaria.' },
+    ],
+  },
+  {
+    verb: 'ter',
+    titleZh: 'ter · 有',
+    titlePt: 'ter · possuir',
+    rows: [
+      { tenseZh: '现在时', tensePt: 'Presente', forms: ['tenho', 'tem', 'temos', 'têm'], example: 'Tenho tempo agora.' },
+      { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['tive', 'teve', 'tivemos', 'tiveram'], example: 'Tivemos uma boa aula.' },
+      { tenseZh: '将来虚拟式', tensePt: 'Futuro do subjuntivo', forms: ['tiver', 'tiver', 'tivermos', 'tiverem'], example: 'Quando eu tiver tempo, vou estudar.' },
+    ],
+  },
+  {
+    verb: 'ir',
+    titleZh: 'ir · 去',
+    titlePt: 'ir · movimento',
+    rows: [
+      { tenseZh: '现在时', tensePt: 'Presente', forms: ['vou', 'vai', 'vamos', 'vão'], example: 'Eles vão ao mercado.' },
+      { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['fui', 'foi', 'fomos', 'foram'], example: 'Nós fomos ao centro.' },
+      { tenseZh: '将来近接', tensePt: 'Futuro com ir', forms: ['vou falar', 'vai falar', 'vamos falar', 'vão falar'], example: 'Vou falar com ela amanhã.' },
+    ],
+  },
+  {
+    verb: 'fazer',
+    titleZh: 'fazer · 做',
+    titlePt: 'fazer · fazer',
+    rows: [
+      { tenseZh: '现在时', tensePt: 'Presente', forms: ['faço', 'faz', 'fazemos', 'fazem'], example: 'Faço exercícios todos os dias.' },
+      { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['fiz', 'fez', 'fizemos', 'fizeram'], example: 'Ela fez a tarefa cedo.' },
+      { tenseZh: '将来虚拟式', tensePt: 'Futuro do subjuntivo', forms: ['fizer', 'fizer', 'fizermos', 'fizerem'], example: 'Quando vocês fizerem a revisão, avisem.' },
+    ],
+  },
+  {
+    verb: 'poder',
+    titleZh: 'poder · 能够',
+    titlePt: 'poder · capacidade/possibilidade',
+    rows: [
+      { tenseZh: '现在时', tensePt: 'Presente', forms: ['posso', 'pode', 'podemos', 'podem'], example: 'Posso ajudar você.' },
+      { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['pude', 'pôde', 'pudemos', 'puderam'], example: 'Ontem não pude estudar.' },
+      { tenseZh: '条件式', tensePt: 'Condicional', forms: ['poderia', 'poderia', 'poderíamos', 'poderiam'], example: 'Poderíamos sair mais cedo.' },
+    ],
+  },
+];
+
 type GenderValue = 'masculine' | 'feminine' | 'common';
 
 const genderQuestions: Array<{ word: string; gender: GenderValue; article: string; zh: string; tipZh: string; tipPt: string }> = [
@@ -952,19 +1059,26 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         <button className="tomorrow-button" onClick={restartVocabReview}>{ui.reviewAgain}</button>
       </div>}
     </section>}
-    {mode === 'verbs' && <section className="study-panel mt-8 rounded-[28px] p-6">
-      {!verbComplete ? <>
-        <div className="verb-daily-status"><div><p className="eyebrow">{language==='zh'?verb.tenseZh:verb.tensePt}</p><strong>{language==='zh'?`第 ${verbStep+1} 题 / 5`:`Questão ${verbStep+1} / 5`}</strong></div><span>{language==='zh'?`答对 ${verbScore}`:`Acertos ${verbScore}`}</span></div>
-        <div className="verb-progress"><span style={{width:`${((verbStep + (verbResult==='idle'?0:1)) / 5) * 100}%`}}/></div>
-        <div className="verb-prompt mt-5"><span>{verb.infinitive.toUpperCase()}</span><b>{verb.subject}</b><small>{verb.sentence}</small></div>
-        <form onSubmit={checkVerb} className="mt-6"><label className="text-xs font-bold text-[#18352f]/55" htmlFor="verb-answer">{ui.answer}</label><input id="verb-answer" value={verbAnswer} onChange={e=>setVerbAnswer(e.target.value)} disabled={verbResult!=='idle'} className="answer-input mt-2" autoComplete="off" spellCheck={false}/><button className="primary-wide mt-4" type="submit" disabled={!verbAnswer.trim()||verbResult!=='idle'}><span>✓</span>{ui.verify}</button></form>
-        {verbResult!=='idle'&&<div className={`answer-feedback mt-5 ${verbResult}`}><strong>{verbResult==='correct'?`${ui.correct} ${verb.accepted.length>1?ui.accepted:''}`:`${ui.wrong} “${verb.accepted.map(item=>item.form).join(' / ')}”`}</strong><small>{verbExplanation}</small><div className="explanation-list">{verb.accepted.map(item=><p key={item.form} className={verbAnswer.trim().toLocaleLowerCase('pt-BR')===item.form?'matched':''}><b>{item.form}</b><span>{language==='zh'?item.zh:item.pt}</span></p>)}</div><button className="next-question" onClick={nextVerb}><span>{verbStep===4?(language==='zh'?'查看结果':'Ver resultado'):ui.next}</span><b aria-hidden="true">→</b></button></div>}
-      </> : <div className="answer-feedback correct verb-complete text-center">
-        <span className="completion-medal" aria-hidden="true">★</span><p className="eyebrow">{language==='zh'?'变位巩固完成':'Conjugação concluída'}</p><h1>{verbScore}/5</h1><p>{language==='zh'?'你已完成 5 题动词时态与不规则变位巩固。':'Você concluiu 5 questões de tempos verbais e formas irregulares.'}</p>
-        {verbMistakes.length>0&&<div className="verb-mistake-summary"><strong>{language==='zh'?'本组需要复习':'Para revisar'}</strong>{verbMistakes.map(item=><span key={item}>{item}</span>)}</div>}
-        <button className="next-question" onClick={returnToJourney}><span>{language==='zh'?'返回练习':'Voltar à prática'}</span><b aria-hidden="true">→</b></button>
-        <button className="tomorrow-button" onClick={restartVerbPractice}>{language==='zh'?'额外练习5题（不重复打卡）':'Mais 5 questões (sem novo check-in)'}</button>
-      </div>}
+    {mode === 'verbs' && <section className="study-panel verb-reference mt-8 rounded-[28px] p-6">
+      <div className="verb-reference-hero">
+        <p className="eyebrow">{language === 'zh' ? '知识巩固' : 'Revisão gramatical'}</p>
+        <h1>{language === 'zh' ? '常见时态变位速查' : 'Conjugação essencial'}</h1>
+        <p>{language === 'zh' ? '先看规则动词 -ar / -er / -ir，再看高频不规则动词。每组都配一个自然例句，可直接听发音。' : 'Revise verbos regulares em -ar, -er, -ir e formas irregulares frequentes, sempre com frase-modelo.'}</p>
+      </div>
+      <div className="verb-reference-section">
+        <h2>{language === 'zh' ? '规则动词变位' : 'Verbos regulares'}</h2>
+        {regularConjugationTables.map(table => <article key={table.verb} className="verb-table-card">
+          <div className="verb-table-title"><span>{table.ending}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong><small>{table.verb}</small></div>
+          <div className="verb-table-scroll"><table><thead><tr><th>{language === 'zh' ? '时态' : 'Tempo'}</th>{pronouns.map(pronoun => <th key={pronoun}>{pronoun}</th>)}</tr></thead><tbody>{table.rows.map(row => <tr key={`${table.verb}-${row.tenseZh}`}><td><b>{language === 'zh' ? row.tenseZh : row.tensePt}</b><button type="button" onClick={() => playPortuguese(row.example)}>▶</button><small>{row.example}</small></td>{row.forms.map((form, index) => <td key={`${form}-${index}`}>{form}</td>)}</tr>)}</tbody></table></div>
+        </article>)}
+      </div>
+      <div className="verb-reference-section">
+        <h2>{language === 'zh' ? '高频不规则变位' : 'Irregulares frequentes'}</h2>
+        {irregularConjugationTables.map(table => <article key={table.verb} className="verb-table-card irregular">
+          <div className="verb-table-title"><span>{table.verb}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong><small>{language === 'zh' ? '常见形式' : 'formas essenciais'}</small></div>
+          <div className="verb-table-scroll"><table><thead><tr><th>{language === 'zh' ? '时态' : 'Tempo'}</th>{pronouns.map(pronoun => <th key={pronoun}>{pronoun}</th>)}</tr></thead><tbody>{table.rows.map(row => <tr key={`${table.verb}-${row.tenseZh}`}><td><b>{language === 'zh' ? row.tenseZh : row.tensePt}</b><button type="button" onClick={() => playPortuguese(row.example)}>▶</button><small>{row.example}</small></td>{row.forms.map((form, index) => <td key={`${form}-${index}`}>{form}</td>)}</tr>)}</tbody></table></div>
+        </article>)}
+      </div>
     </section>}
     {mode === 'gender' && (genderComplete ?
       <section className="study-panel gender-complete mt-8 rounded-[28px] p-6 text-center">
@@ -1017,4 +1131,4 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
 
 function TopBar({ c, title, onBack, action }: { c: Copy; title: string; onBack: () => void; action?: string }) { return <header className="grid grid-cols-[44px_1fr_44px] items-center"><button onClick={onBack} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8f1ec] text-lg font-black" aria-label={c.back}>←</button><h1 className="text-center text-base font-black">{title}</h1><span className="text-right text-xs font-bold text-[#18352f]/45">{action}</span></header>; }
 
-function Nav({ c, active, onPractice, onVerbs }: { c: Copy; active: 'practice'|'verbs'|'profile'; onPractice: () => void; onVerbs: () => void }) { return <nav className="absolute-nav flex items-center justify-around" aria-label={c.navigation}><button onClick={onPractice} className={active==='practice'?'nav-active':''}>◉<span>{c.nav[1]}</span></button><button onClick={onVerbs} className={active==='verbs'?'nav-active':''}>V<span>{c === text.zh ? '变位' : 'Verbos'}</span></button><button className={active==='profile'?'nav-active':''}>◎<span>{c.nav[3]}</span></button></nav>; }
+function Nav({ c, active, onPractice, onVerbs }: { c: Copy; active: 'practice'|'verbs'|'profile'; onPractice: () => void; onVerbs: () => void }) { return <nav className="absolute-nav flex items-center justify-around" aria-label={c.navigation}><button onClick={onPractice} className={active==='practice'?'nav-active':''}>◉<span>{c.nav[1]}</span></button><button onClick={onVerbs} className={active==='verbs'?'nav-active':''}>V<span>{c === text.zh ? '巩固' : 'Revisão'}</span></button><button className={active==='profile'?'nav-active':''}>◎<span>{c.nav[3]}</span></button></nav>; }
