@@ -962,20 +962,29 @@ button:focus-visible {
 .verb-reference-hero p { margin-top: 5px; color: rgba(23,52,99,.66); font-size: 10px; font-weight: 750; line-height: 1.45; }
 .verb-reference-section { display: grid; gap: 9px; }
 .verb-reference-section h2 { color: var(--tile-blue); font-size: 14px; font-weight: 900; letter-spacing: 0; }
-.verb-list-card { overflow: hidden; border: 1px solid rgba(18,61,130,.16); border-radius: 14px; background: rgba(255,255,255,.72); color: var(--tile-blue); }
-.verb-list-card.irregular { background: #f4f0e5; }
-.verb-list-title { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 9px 10px; border-bottom: 1px solid rgba(18,61,130,.10); }
-.verb-list-title span { display: grid; min-width: 36px; height: 28px; place-items: center; border-radius: 9px; background: var(--tile-blue); color: white; font-size: 11px; font-weight: 900; }
-.verb-list-title strong { min-width: 0; font-size: 12px; font-weight: 900; overflow-wrap: anywhere; }
-.verb-list-title small { color: rgba(23,52,99,.55); font-size: 9px; font-weight: 850; text-align: right; }
-.verb-list-rows { display: grid; }
-.verb-list-row { display: grid; gap: 5px; padding: 8px 10px; border-bottom: 1px solid rgba(18,61,130,.08); }
-.verb-list-row:last-child { border-bottom: 0; }
-.verb-list-row b { color: var(--tile-blue); font-size: 11px; font-weight: 900; }
-.verb-list-row p { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
-.verb-list-row p span { display: inline-flex; align-items: baseline; gap: 3px; border-radius: 8px; background: rgba(18,61,130,.07); padding: 4px 6px; color: var(--tile-blue); font-size: 11px; font-weight: 900; line-height: 1; }
-.verb-list-row p em { color: rgba(23,52,99,.52); font-size: 8px; font-style: normal; font-weight: 850; }
-.verb-list-row button { justify-self: start; color: rgba(23,52,99,.62); font-size: 10px; font-weight: 800; line-height: 1.35; text-align: left; }
+.conjugation-sheet { overflow-x: auto; border: 1px solid rgba(18,61,130,.24); border-radius: 10px; background: rgba(255,255,255,.78); -webkit-overflow-scrolling: touch; }
+.conjugation-sheet.irregular { background: #f6f0e5; }
+.conjugation-sheet table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.conjugation-sheet th,
+.conjugation-sheet td { border-right: 1px solid rgba(18,61,130,.22); border-bottom: 1px solid rgba(18,61,130,.22); padding: 5px 3px; text-align: center; vertical-align: top; }
+.conjugation-sheet tr:last-child th,
+.conjugation-sheet tr:last-child td { border-bottom: 0; }
+.conjugation-sheet th:last-child,
+.conjugation-sheet td:last-child { border-right: 0; }
+.conjugation-sheet thead th { background: rgba(18,61,130,.09); color: rgba(23,52,99,.72); font-size: 8px; font-weight: 900; line-height: 1.2; }
+.conjugation-sheet tbody th { width: 68px; background: rgba(237,241,189,.58); color: var(--tile-blue); }
+.conjugation-sheet tbody th span,
+.conjugation-sheet tbody th strong,
+.conjugation-sheet tbody th button { display: block; }
+.conjugation-sheet tbody th span { margin-bottom: 3px; font-size: 10px; font-weight: 950; }
+.conjugation-sheet tbody th strong { font-size: 9px; font-weight: 900; line-height: 1.2; overflow-wrap: anywhere; }
+.conjugation-sheet tbody th button { margin: 5px auto 0; color: rgba(23,52,99,.58); font-size: 8px; font-weight: 900; }
+.conjugation-sheet td span,
+.conjugation-sheet td em { display: block; color: var(--tile-blue); font-size: 9px; font-style: normal; font-weight: 900; line-height: 1.42; overflow-wrap: anywhere; }
+.conjugation-sheet td em { color: rgba(23,52,99,.22); }
+.conjugation-examples { display: grid; gap: 5px; }
+.conjugation-examples button { display: grid; grid-template-columns: 42px 1fr; gap: 6px; align-items: center; border-radius: 9px; background: rgba(18,61,130,.06); padding: 6px 8px; color: rgba(23,52,99,.62); font-size: 10px; font-weight: 800; text-align: left; }
+.conjugation-examples b { color: var(--tile-blue); font-size: 10px; font-weight: 950; }
 .journey-tools { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
 .journey-tools button { display: grid; grid-template-columns: 31px 1fr auto; align-items: center; gap: 7px; border: 1px solid rgba(18,61,130,.15); border-radius: 14px; background: var(--tile-paper); padding: 9px; color: var(--tile-blue); text-align: left; }
 .journey-tools button > span { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 9px; background: #edf1bd; font-size: 10px; font-weight: 900; }

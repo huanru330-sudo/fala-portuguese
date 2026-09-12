@@ -253,6 +253,14 @@ const verbQuestions = [
 
 const pronouns = ['eu', 'você/ele/ela', 'nós', 'vocês/eles/elas'];
 
+const commonTenses = [
+  { zh: '现在时', pt: 'Presente' },
+  { zh: '简单过去时', pt: 'Pretérito perfeito' },
+  { zh: '未完成过去时', pt: 'Pretérito imperfeito' },
+  { zh: '将来时', pt: 'Futuro' },
+  { zh: '条件式', pt: 'Condicional' },
+];
+
 const regularConjugationTables = [
   {
     ending: '-ar',
@@ -1062,30 +1070,28 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     {mode === 'verbs' && <section className="study-panel verb-reference mt-8 rounded-[28px] p-5">
       <div className="verb-reference-hero">
         <p className="eyebrow">{language === 'zh' ? '知识巩固' : 'Revisão gramatical'}</p>
-        <h1>{language === 'zh' ? '常见时态变位速查' : 'Conjugação essencial'}</h1>
-        <p>{language === 'zh' ? '规则动词和高频不规则动词整理成速查清单，直接看词形和例句。' : 'Lista rápida de verbos regulares e irregulares, com formas e exemplos.'}</p>
+        <h1>{language === 'zh' ? '不规则动词变位表' : 'Tabela de conjugação'}</h1>
+        <p>{language === 'zh' ? '参考纸质变位表排版：左边看动词，上方看时态，格子里直接看常用人称变位。' : 'Formato de tabela: verbos à esquerda, tempos no topo e formas nas células.'}</p>
       </div>
       <div className="verb-reference-section">
         <h2>{language === 'zh' ? '规则动词变位' : 'Verbos regulares'}</h2>
-        {regularConjugationTables.map(table => <article key={table.verb} className="verb-list-card">
-          <div className="verb-list-title"><span>{table.ending}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong><small>{table.verb}</small></div>
-          <div className="verb-list-rows">{table.rows.map(row => <div key={`${table.verb}-${row.tenseZh}`} className="verb-list-row">
-            <b>{language === 'zh' ? row.tenseZh : row.tensePt}</b>
-            <p>{row.forms.map((form, index) => <span key={`${form}-${index}`}><em>{pronouns[index]}</em>{form}</span>)}</p>
-            <button type="button" onClick={() => playPortuguese(row.example)}>▶ {row.example}</button>
-          </div>)}</div>
-        </article>)}
+        <div className="conjugation-sheet"><table><thead><tr><th>{language === 'zh' ? '动词' : 'Verbo'}</th>{commonTenses.map(tense => <th key={tense.zh}>{language === 'zh' ? tense.zh : tense.pt}</th>)}</tr></thead><tbody>
+          {regularConjugationTables.map(table => <tr key={table.verb}><th><span>{table.ending}</span><strong>{table.verb}</strong><button type="button" onClick={() => playPortuguese(table.rows[0].example)}>▶ 例句</button></th>{commonTenses.map(tense => {
+            const row = table.rows.find(item => item.tenseZh === tense.zh);
+            return <td key={`${table.verb}-${tense.zh}`}>{row ? row.forms.map((form, index) => <span key={`${form}-${index}`}>{form}</span>) : <em>—</em>}</td>;
+          })}</tr>)}
+        </tbody></table></div>
+        <div className="conjugation-examples">{regularConjugationTables.map(table => <button key={`${table.verb}-example`} type="button" onClick={() => playPortuguese(table.rows[0].example)}><b>{table.verb}</b>{table.rows[0].example}</button>)}</div>
       </div>
       <div className="verb-reference-section">
         <h2>{language === 'zh' ? '高频不规则变位' : 'Irregulares frequentes'}</h2>
-        {irregularConjugationTables.map(table => <article key={table.verb} className="verb-list-card irregular">
-          <div className="verb-list-title"><span>{table.verb}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong><small>{language === 'zh' ? '常见形式' : 'formas essenciais'}</small></div>
-          <div className="verb-list-rows">{table.rows.map(row => <div key={`${table.verb}-${row.tenseZh}`} className="verb-list-row">
-            <b>{language === 'zh' ? row.tenseZh : row.tensePt}</b>
-            <p>{row.forms.map((form, index) => <span key={`${form}-${index}`}><em>{pronouns[index]}</em>{form}</span>)}</p>
-            <button type="button" onClick={() => playPortuguese(row.example)}>▶ {row.example}</button>
-          </div>)}</div>
-        </article>)}
+        <div className="conjugation-sheet irregular"><table><thead><tr><th>{language === 'zh' ? '动词' : 'Verbo'}</th>{commonTenses.map(tense => <th key={tense.zh}>{language === 'zh' ? tense.zh : tense.pt}</th>)}</tr></thead><tbody>
+          {irregularConjugationTables.map(table => <tr key={table.verb}><th><span>{table.verb}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong><button type="button" onClick={() => playPortuguese(table.rows[0].example)}>▶ 例句</button></th>{commonTenses.map(tense => {
+            const row = table.rows.find(item => item.tenseZh === tense.zh);
+            return <td key={`${table.verb}-${tense.zh}`}>{row ? row.forms.map((form, index) => <span key={`${form}-${index}`}>{form}</span>) : <em>—</em>}</td>;
+          })}</tr>)}
+        </tbody></table></div>
+        <div className="conjugation-examples">{irregularConjugationTables.map(table => <button key={`${table.verb}-example`} type="button" onClick={() => playPortuguese(table.rows[0].example)}><b>{table.verb}</b>{table.rows[0].example}</button>)}</div>
       </div>
     </section>}
     {mode === 'gender' && (genderComplete ?
