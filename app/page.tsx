@@ -553,9 +553,11 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const activeCompletedDays = Object.values(activeLearningProgress.history).filter(record => record.completed).length;
   const currentLevelProgress = levelDeckIndices.length ? Math.min(100, Math.round((activeLearningProgress.lesson / levelDeckIndices.length) * 100)) : 0;
   const monthlyCompletionRate = Math.min(100, Math.round((completedDayKeys.size / 30) * 100));
+  const profileNickname = 'Huanru';
   const profileUi = language === 'zh' ? {
     title: '我的学习',
     subtitle: '今天的状态、等级进度和词汇掌握都放在这里。',
+    nickname: '昵称',
     streak: '连续学习',
     totalDays: '累计学习',
     todayDone: '今日状态',
@@ -569,14 +571,16 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     vocabulary: '词汇掌握',
     practice: '练习记录',
     settings: '设置',
+    checkinCalendar: '打卡日历',
+    checkinRange: '2026.06 - 2027.07',
     dailyGoal: '每日目标',
     display: '显示语言',
-    voice: '发音服务',
-    connected: 'Azure TTS 已连接',
+    level: '当前等级',
     next: '下一步',
   } : {
     title: 'Meu perfil',
     subtitle: 'Seu estado de hoje, progresso do nível e vocabulário.',
+    nickname: 'Apelido',
     streak: 'Sequência',
     totalDays: 'Dias no total',
     todayDone: 'Hoje',
@@ -590,12 +594,26 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     vocabulary: 'Vocabulário',
     practice: 'Registros',
     settings: 'Configurações',
+    checkinCalendar: 'Calendário',
+    checkinRange: '06/2026 - 07/2027',
     dailyGoal: 'Meta diária',
     display: 'Idioma',
-    voice: 'Voz',
-    connected: 'Azure TTS conectado',
+    level: 'Nível atual',
     next: 'Próximo',
   };
+  const profileCalendarMonths = Array.from({ length: 14 }, (_, monthOffset) => {
+    const date = new Date(2026, 5 + monthOffset, 1);
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days = Array.from({ length: daysInMonth }, (_, dayIndex) => {
+      const day = dayIndex + 1;
+      const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const record = activeLearningProgress.history[key];
+      return { key, day, record };
+    });
+    return { key: `${year}-${month + 1}`, label: `${year}.${String(month + 1).padStart(2, '0')}`, days };
+  });
   const journeyStages: Array<{ mode: PracticeMode; icon: string; title: string; meta: string }> = [
     { mode: 'vocab', icon: 'Aa', title: language==='zh'?`${selectedLevel} 词汇热身`:`Vocabulário ${selectedLevel}`, meta: language==='zh'?'词义、例句与词形':'Significado, frase e forma' },
     { mode: 'listening', icon: '◖))', title: skillUi.listening, meta: skillUi.listeningMeta },
@@ -1021,7 +1039,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   </div>;
 
   if (mode === 'profile') return <div className="screen-enter min-h-[790px] px-6 pb-28 pt-7">
-    <header className="profile-header"><div><p className="eyebrow">Fala Português</p><h1>{profileUi.title}</h1><small>{profileUi.subtitle}</small></div><span>{selectedLevel}</span></header>
+    <header className="profile-header"><div><p className="eyebrow">{profileUi.nickname}</p><h1>{profileNickname}</h1><small>{profileUi.subtitle}</small></div><span>{selectedLevel}</span></header>
     <section className="profile-overview mt-6">
       <article><small>{profileUi.streak}</small><strong>{activeCompletedDays || Object.values(activeLearningProgress.history).length || 1}</strong><span>{language==='zh'?'天':'dias'}</span></article>
       <article><small>{profileUi.totalDays}</small><strong>{completedDayKeys.size || activeCompletedDays || 1}</strong><span>{language==='zh'?'天':'dias'}</span></article>
@@ -1036,9 +1054,9 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         <span><b>{monthlyCompletionRate}%</b><small>{profileUi.monthRate}</small></span>
       </div>
     </section>
-    <section className="profile-week mt-4">
-      <div className="profile-card-title"><strong>{language==='zh'?'最近 7 天':'Últimos 7 dias'}</strong><span>{activeCompletedDays}/{Object.keys(activeLearningProgress.history).length || 7}</span></div>
-      <div className="profile-week-days">{recentLearningDays.map(item=><div key={item.key} className={item.record?.completed?'done':item.record?'partial':'missed'}><span>{item.day}</span><b>{item.record?.completed?'✓':item.record?.completedStages || '·'}</b></div>)}</div>
+    <section className="profile-calendar mt-4">
+      <div className="profile-card-title"><strong>{profileUi.checkinCalendar}</strong><span>{profileUi.checkinRange}</span></div>
+      <div className="profile-calendar-scroll">{profileCalendarMonths.map(month => <article key={month.key}><h3>{month.label}</h3><div>{month.days.map(item => <span key={item.key} title={`${month.label}.${item.day}`} className={item.record?.completed?'done':item.record?'partial':''}/>)}</div></article>)}</div>
     </section>
     <section className="profile-two-col mt-4">
       <article className="profile-card compact"><div className="profile-card-title"><strong>{profileUi.vocabulary}</strong><span>{vocabLoopStats.cycle}</span></div><p><b>{learnedWordEstimate}</b>{profileUi.learnedWords}</p><p><b>{activeMistakeWords.length}</b>{profileUi.reviewWords}</p></article>
@@ -1046,9 +1064,10 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     </section>
     <section className="profile-settings mt-4">
       <h2>{profileUi.settings}</h2>
+      <div><span>{profileUi.nickname}</span><strong>{profileNickname}</strong></div>
+      <div><span>{profileUi.level}</span><strong>{selectedLevel}</strong></div>
       <div><span>{profileUi.dailyGoal}</span><strong>10 {language==='zh'?'词 / 天':'palavras/dia'}</strong></div>
       <div><span>{profileUi.display}</span><strong>{language==='zh'?'中文':'Português'}</strong></div>
-      <div><span>{profileUi.voice}</span><strong>{profileUi.connected}</strong></div>
     </section>
     <Nav c={c} active="profile" onPractice={()=>setMode('hub')} onVerbs={()=>setMode('verbs')} onProfile={()=>setMode('profile')}/>
   </div>;
