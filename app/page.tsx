@@ -312,6 +312,8 @@ const irregularConjugationTables = [
       { tenseZh: '现在时', tensePt: 'Presente', forms: ['sou', 'é', 'somos', 'são'], example: 'Nós somos estudantes.' },
       { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['fui', 'foi', 'fomos', 'foram'], example: 'A reunião foi útil.' },
       { tenseZh: '未完成过去时', tensePt: 'Pretérito imperfeito', forms: ['era', 'era', 'éramos', 'eram'], example: 'Antes, ela era tímida.' },
+      { tenseZh: '将来时', tensePt: 'Futuro', forms: ['serei', 'será', 'seremos', 'serão'], example: 'Serei mais confiante.' },
+      { tenseZh: '条件式', tensePt: 'Condicional', forms: ['seria', 'seria', 'seríamos', 'seriam'], example: 'Seria melhor estudar agora.' },
     ],
   },
   {
@@ -321,7 +323,9 @@ const irregularConjugationTables = [
     rows: [
       { tenseZh: '现在时', tensePt: 'Presente', forms: ['estou', 'está', 'estamos', 'estão'], example: 'Estou pronto para começar.' },
       { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['estive', 'esteve', 'estivemos', 'estiveram'], example: 'Estive em São Paulo ontem.' },
-      { tenseZh: '过去虚拟式', tensePt: 'Imperfeito do subjuntivo', forms: ['estivesse', 'estivesse', 'estivéssemos', 'estivessem'], example: 'Se ela estivesse aqui, ajudaria.' },
+      { tenseZh: '未完成过去时', tensePt: 'Pretérito imperfeito', forms: ['estava', 'estava', 'estávamos', 'estavam'], example: 'Eu estava em casa.' },
+      { tenseZh: '将来时', tensePt: 'Futuro', forms: ['estarei', 'estará', 'estaremos', 'estarão'], example: 'Estaremos prontos amanhã.' },
+      { tenseZh: '条件式', tensePt: 'Condicional', forms: ['estaria', 'estaria', 'estaríamos', 'estariam'], example: 'Eu estaria feliz com isso.' },
     ],
   },
   {
@@ -331,7 +335,9 @@ const irregularConjugationTables = [
     rows: [
       { tenseZh: '现在时', tensePt: 'Presente', forms: ['tenho', 'tem', 'temos', 'têm'], example: 'Tenho tempo agora.' },
       { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['tive', 'teve', 'tivemos', 'tiveram'], example: 'Tivemos uma boa aula.' },
-      { tenseZh: '将来虚拟式', tensePt: 'Futuro do subjuntivo', forms: ['tiver', 'tiver', 'tivermos', 'tiverem'], example: 'Quando eu tiver tempo, vou estudar.' },
+      { tenseZh: '未完成过去时', tensePt: 'Pretérito imperfeito', forms: ['tinha', 'tinha', 'tínhamos', 'tinham'], example: 'Eu tinha tempo.' },
+      { tenseZh: '将来时', tensePt: 'Futuro', forms: ['terei', 'terá', 'teremos', 'terão'], example: 'Teremos aula amanhã.' },
+      { tenseZh: '条件式', tensePt: 'Condicional', forms: ['teria', 'teria', 'teríamos', 'teriam'], example: 'Eu teria mais tempo.' },
     ],
   },
   {
@@ -341,7 +347,9 @@ const irregularConjugationTables = [
     rows: [
       { tenseZh: '现在时', tensePt: 'Presente', forms: ['vou', 'vai', 'vamos', 'vão'], example: 'Eles vão ao mercado.' },
       { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['fui', 'foi', 'fomos', 'foram'], example: 'Nós fomos ao centro.' },
-      { tenseZh: '将来近接', tensePt: 'Futuro com ir', forms: ['vou falar', 'vai falar', 'vamos falar', 'vão falar'], example: 'Vou falar com ela amanhã.' },
+      { tenseZh: '未完成过去时', tensePt: 'Pretérito imperfeito', forms: ['ia', 'ia', 'íamos', 'iam'], example: 'Eu ia ao curso.' },
+      { tenseZh: '将来时', tensePt: 'Futuro', forms: ['irei', 'irá', 'iremos', 'irão'], example: 'Iremos juntos.' },
+      { tenseZh: '条件式', tensePt: 'Condicional', forms: ['iria', 'iria', 'iríamos', 'iriam'], example: 'Eu iria se pudesse.' },
     ],
   },
   {
@@ -351,7 +359,9 @@ const irregularConjugationTables = [
     rows: [
       { tenseZh: '现在时', tensePt: 'Presente', forms: ['faço', 'faz', 'fazemos', 'fazem'], example: 'Faço exercícios todos os dias.' },
       { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['fiz', 'fez', 'fizemos', 'fizeram'], example: 'Ela fez a tarefa cedo.' },
-      { tenseZh: '将来虚拟式', tensePt: 'Futuro do subjuntivo', forms: ['fizer', 'fizer', 'fizermos', 'fizerem'], example: 'Quando vocês fizerem a revisão, avisem.' },
+      { tenseZh: '未完成过去时', tensePt: 'Pretérito imperfeito', forms: ['fazia', 'fazia', 'fazíamos', 'faziam'], example: 'Eu fazia revisão.' },
+      { tenseZh: '将来时', tensePt: 'Futuro', forms: ['farei', 'fará', 'faremos', 'farão'], example: 'Farei isso hoje.' },
+      { tenseZh: '条件式', tensePt: 'Condicional', forms: ['faria', 'faria', 'faríamos', 'fariam'], example: 'Eu faria de novo.' },
     ],
   },
   {
@@ -361,6 +371,8 @@ const irregularConjugationTables = [
     rows: [
       { tenseZh: '现在时', tensePt: 'Presente', forms: ['posso', 'pode', 'podemos', 'podem'], example: 'Posso ajudar você.' },
       { tenseZh: '简单过去时', tensePt: 'Pretérito perfeito', forms: ['pude', 'pôde', 'pudemos', 'puderam'], example: 'Ontem não pude estudar.' },
+      { tenseZh: '未完成过去时', tensePt: 'Pretérito imperfeito', forms: ['podia', 'podia', 'podíamos', 'podiam'], example: 'Eu podia estudar mais.' },
+      { tenseZh: '将来时', tensePt: 'Futuro', forms: ['poderei', 'poderá', 'poderemos', 'poderão'], example: 'Poderemos conversar amanhã.' },
       { tenseZh: '条件式', tensePt: 'Condicional', forms: ['poderia', 'poderia', 'poderíamos', 'poderiam'], example: 'Poderíamos sair mais cedo.' },
     ],
   },
@@ -1070,28 +1082,26 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     {mode === 'verbs' && <section className="study-panel verb-reference mt-8 rounded-[28px] p-5">
       <div className="verb-reference-hero">
         <p className="eyebrow">{language === 'zh' ? '知识巩固' : 'Revisão gramatical'}</p>
-        <h1>{language === 'zh' ? '不规则动词变位表' : 'Tabela de conjugação'}</h1>
-        <p>{language === 'zh' ? '参考纸质变位表排版：左边看动词，上方看时态，格子里直接看常用人称变位。' : 'Formato de tabela: verbos à esquerda, tempos no topo e formas nas células.'}</p>
+        <h1>{language === 'zh' ? '常见动词变位表' : 'Tabela de conjugação'}</h1>
+        <p>{language === 'zh' ? '左边看动词，上方看时态，格子里只保留常用人称变位。' : 'Verbos à esquerda, tempos no topo e apenas formas nas células.'}</p>
       </div>
       <div className="verb-reference-section">
         <h2>{language === 'zh' ? '规则动词变位' : 'Verbos regulares'}</h2>
         <div className="conjugation-sheet"><table><thead><tr><th>{language === 'zh' ? '动词' : 'Verbo'}</th>{commonTenses.map(tense => <th key={tense.zh}>{language === 'zh' ? tense.zh : tense.pt}</th>)}</tr></thead><tbody>
-          {regularConjugationTables.map(table => <tr key={table.verb}><th><span>{table.ending}</span><strong>{table.verb}</strong><button type="button" onClick={() => playPortuguese(table.rows[0].example)}>▶ 例句</button></th>{commonTenses.map(tense => {
+          {regularConjugationTables.map(table => <tr key={table.verb}><th><span>{table.ending}</span><strong>{table.verb}</strong></th>{commonTenses.map(tense => {
             const row = table.rows.find(item => item.tenseZh === tense.zh);
-            return <td key={`${table.verb}-${tense.zh}`}>{row ? row.forms.map((form, index) => <span key={`${form}-${index}`}>{form}</span>) : <em>—</em>}</td>;
+            return <td key={`${table.verb}-${tense.zh}`}>{row ? row.forms.map((form, index) => <span key={`${form}-${index}`}>{form}</span>) : null}</td>;
           })}</tr>)}
         </tbody></table></div>
-        <div className="conjugation-examples">{regularConjugationTables.map(table => <button key={`${table.verb}-example`} type="button" onClick={() => playPortuguese(table.rows[0].example)}><b>{table.verb}</b>{table.rows[0].example}</button>)}</div>
       </div>
       <div className="verb-reference-section">
         <h2>{language === 'zh' ? '高频不规则变位' : 'Irregulares frequentes'}</h2>
         <div className="conjugation-sheet irregular"><table><thead><tr><th>{language === 'zh' ? '动词' : 'Verbo'}</th>{commonTenses.map(tense => <th key={tense.zh}>{language === 'zh' ? tense.zh : tense.pt}</th>)}</tr></thead><tbody>
-          {irregularConjugationTables.map(table => <tr key={table.verb}><th><span>{table.verb}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong><button type="button" onClick={() => playPortuguese(table.rows[0].example)}>▶ 例句</button></th>{commonTenses.map(tense => {
+          {irregularConjugationTables.map(table => <tr key={table.verb}><th><span>{table.verb}</span><strong>{language === 'zh' ? table.titleZh : table.titlePt}</strong></th>{commonTenses.map(tense => {
             const row = table.rows.find(item => item.tenseZh === tense.zh);
-            return <td key={`${table.verb}-${tense.zh}`}>{row ? row.forms.map((form, index) => <span key={`${form}-${index}`}>{form}</span>) : <em>—</em>}</td>;
+            return <td key={`${table.verb}-${tense.zh}`}>{row ? row.forms.map((form, index) => <span key={`${form}-${index}`}>{form}</span>) : null}</td>;
           })}</tr>)}
         </tbody></table></div>
-        <div className="conjugation-examples">{irregularConjugationTables.map(table => <button key={`${table.verb}-example`} type="button" onClick={() => playPortuguese(table.rows[0].example)}><b>{table.verb}</b>{table.rows[0].example}</button>)}</div>
       </div>
     </section>}
     {mode === 'gender' && (genderComplete ?

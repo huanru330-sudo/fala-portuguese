@@ -974,17 +974,12 @@ button:focus-visible {
 .conjugation-sheet thead th { background: rgba(18,61,130,.09); color: rgba(23,52,99,.72); font-size: 8px; font-weight: 900; line-height: 1.2; }
 .conjugation-sheet tbody th { width: 68px; background: rgba(237,241,189,.58); color: var(--tile-blue); }
 .conjugation-sheet tbody th span,
-.conjugation-sheet tbody th strong,
-.conjugation-sheet tbody th button { display: block; }
+.conjugation-sheet tbody th strong { display: block; }
 .conjugation-sheet tbody th span { margin-bottom: 3px; font-size: 10px; font-weight: 950; }
 .conjugation-sheet tbody th strong { font-size: 9px; font-weight: 900; line-height: 1.2; overflow-wrap: anywhere; }
-.conjugation-sheet tbody th button { margin: 5px auto 0; color: rgba(23,52,99,.58); font-size: 8px; font-weight: 900; }
 .conjugation-sheet td span,
 .conjugation-sheet td em { display: block; color: var(--tile-blue); font-size: 9px; font-style: normal; font-weight: 900; line-height: 1.42; overflow-wrap: anywhere; }
 .conjugation-sheet td em { color: rgba(23,52,99,.22); }
-.conjugation-examples { display: grid; gap: 5px; }
-.conjugation-examples button { display: grid; grid-template-columns: 42px 1fr; gap: 6px; align-items: center; border-radius: 9px; background: rgba(18,61,130,.06); padding: 6px 8px; color: rgba(23,52,99,.62); font-size: 10px; font-weight: 800; text-align: left; }
-.conjugation-examples b { color: var(--tile-blue); font-size: 10px; font-weight: 950; }
 .journey-tools { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
 .journey-tools button { display: grid; grid-template-columns: 31px 1fr auto; align-items: center; gap: 7px; border: 1px solid rgba(18,61,130,.15); border-radius: 14px; background: var(--tile-paper); padding: 9px; color: var(--tile-blue); text-align: left; }
 .journey-tools button > span { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 9px; background: #edf1bd; font-size: 10px; font-weight: 900; }
