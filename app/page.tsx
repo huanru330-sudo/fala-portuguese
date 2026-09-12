@@ -1091,10 +1091,8 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     </section>
     <section className="profile-settings mt-4">
       <h2>{profileUi.settings}</h2>
-      <div><span>{profileUi.nickname}</span><strong>{profileNickname}</strong></div>
       <div><span>{profileUi.level}</span><strong>{selectedLevel}</strong></div>
       <div><span>{profileUi.dailyGoal}</span><strong>10 {language==='zh'?'词 / 天':'palavras/dia'}</strong></div>
-      <div><span>{profileUi.display}</span><strong>{language==='zh'?'中文':'Português'}</strong></div>
     </section>
     <Nav c={c} active="profile" onPractice={()=>setMode('hub')} onVerbs={()=>setMode('verbs')} onProfile={()=>setMode('profile')}/>
   </div>;
