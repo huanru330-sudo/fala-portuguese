@@ -513,7 +513,7 @@ const genderQuestions: Array<{ word: string; gender: GenderValue; article: strin
 
 const GENDER_STAGE_SIZE = 10;
 const GENDER_STAGE_COUNT = genderQuestions.length / GENDER_STAGE_SIZE;
-const VOCAB_CONTENT_VERSION = 'oi-v5-2600-20260912';
+const VOCAB_CONTENT_VERSION = 'oi-v6-7200-20260913';
 const PROFILE_CALENDAR_START = new Date(2026, 5, 1);
 const PROFILE_CALENDAR_MONTH_COUNT = 14;
 
@@ -783,10 +783,58 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
 
   function readLocalLearningProgress() {
     try {
-      return normalizeLearningProgress(JSON.parse(localStorage.getItem('fala-learning-progress') || '{}'));
+      return migrateLegacyStudyRecords(normalizeLearningProgress(JSON.parse(localStorage.getItem('fala-learning-progress') || '{}')));
     } catch {
-      return {};
+      return migrateLegacyStudyRecords({});
     }
+  }
+
+  function migrateLegacyStudyRecords(progress: LearningProgress) {
+    const next: LearningProgress = { ...progress };
+    let changed = false;
+
+    function markLegacyRecord(level: CEFRLevel, date: string, completedStages = 0) {
+      const current = next[level] || { lesson: 0, stage: 0, startedOn: date, history: {} };
+      const record = current.history[date] || { completedStages: 0, completed: false, studied: false };
+      const updatedRecord = {
+        completedStages: Math.max(record.completedStages || 0, completedStages),
+        completed: Boolean(record.completed),
+        studied: true,
+      };
+      if (record.studied && record.completedStages >= updatedRecord.completedStages) return;
+      next[level] = {
+        ...current,
+        startedOn: current.startedOn < date ? current.startedOn : date,
+        history: { ...current.history, [date]: updatedRecord },
+      };
+      changed = true;
+    }
+
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index) || '';
+      const sessionMatch = key.match(/^fala-vocab-session-(\d{4}-\d{2}-\d{2})-(A1|A2|B1|B2|C1|C2)$/);
+      if (sessionMatch) {
+        try {
+          const saved = JSON.parse(localStorage.getItem(key) || '{}');
+          markLegacyRecord(sessionMatch[2] as CEFRLevel, sessionMatch[1], saved.completed || saved.phase === 'done' ? 1 : 0);
+        } catch {
+          markLegacyRecord(sessionMatch[2] as CEFRLevel, sessionMatch[1]);
+        }
+        continue;
+      }
+
+      const checkinMatch = key.match(/^fala-checkin-(\d{4}-\d{2}-\d{2})-(A1|A2|B1|B2|C1|C2)$/);
+      if (checkinMatch && localStorage.getItem(key) === 'done') {
+        markLegacyRecord(checkinMatch[2] as CEFRLevel, checkinMatch[1], 1);
+        continue;
+      }
+
+      const extraMatch = key.match(/^fala-(?:verb-session|gender)-(\d{4}-\d{2}-\d{2})-(A1|A2|B1|B2|C1|C2)$/);
+      if (extraMatch) markLegacyRecord(extraMatch[2] as CEFRLevel, extraMatch[1]);
+    }
+
+    if (changed) localStorage.setItem('fala-learning-progress', JSON.stringify(next));
+    return next;
   }
 
   function readLocalVocabLoops() {
@@ -807,6 +855,32 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       const loop = loops[cefrLevel];
       if (loop) localStorage.setItem(`fala-vocab-loop-${cefrLevel}`, JSON.stringify(loop));
     }
+  }
+
+  function mergeLearningProgress(primary: LearningProgress, secondary: LearningProgress) {
+    const merged: LearningProgress = { ...primary };
+    for (const level of cefrLevels) {
+      const first = primary[level];
+      const second = secondary[level];
+      if (!first && !second) continue;
+      const history: Record<string, DailyLearningRecord> = {};
+      for (const [date, record] of Object.entries(first?.history || {})) history[date] = record;
+      for (const [date, record] of Object.entries(second?.history || {})) {
+        const current = history[date] || { completedStages: 0, completed: false, studied: false };
+        history[date] = {
+          completedStages: Math.max(current.completedStages || 0, record.completedStages || 0),
+          completed: Boolean(current.completed || record.completed),
+          studied: Boolean(current.studied || record.studied || record.completed || (record.completedStages || 0) > 0),
+        };
+      }
+      merged[level] = {
+        lesson: Math.max(first?.lesson || 0, second?.lesson || 0),
+        stage: Math.max(first?.stage || 0, second?.stage || 0),
+        startedOn: [first?.startedOn, second?.startedOn].filter(Boolean).sort()[0] || dayKey,
+        history,
+      };
+    }
+    return merged;
   }
 
   async function saveCloudState(overrides: Partial<{ selectedLevel: CEFRLevel; learningProgress: LearningProgress; vocabLoop: VocabLoopByLevel }> = {}) {
@@ -836,7 +910,9 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
 
   useEffect(() => {
     if (localStorage.getItem('fala-vocab-content-version') === VOCAB_CONTENT_VERSION) return;
-    const stalePrefixes = ['fala-vocab-session-', 'fala-checkin-', 'fala-vocab-next-deck', 'fala-vocab-loop'];
+    const migratedProgress = readLocalLearningProgress();
+    localStorage.setItem('fala-learning-progress', JSON.stringify(migratedProgress));
+    const stalePrefixes = ['fala-vocab-session-', 'fala-vocab-next-deck', 'fala-vocab-loop'];
     for (let index = localStorage.length - 1; index >= 0; index -= 1) {
       const key = localStorage.key(index);
       if (key && stalePrefixes.some(prefix => key.startsWith(prefix))) localStorage.removeItem(key);
@@ -892,7 +968,9 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         const localProgress = readLocalLearningProgress();
         const localLoops = readLocalVocabLoops();
         const shouldMigrateLocal = !hasSavedProgress(remoteProgress) && hasSavedProgress(localProgress);
-        const nextProgress = shouldMigrateLocal ? localProgress : remoteProgress;
+        const mergedProgress = mergeLearningProgress(remoteProgress, localProgress);
+        const shouldSyncMergedProgress = JSON.stringify(mergedProgress) !== JSON.stringify(remoteProgress);
+        const nextProgress = shouldMigrateLocal ? localProgress : mergedProgress;
         const nextLoops = shouldMigrateLocal ? localLoops : remoteLoops;
         const nextLevel = shouldMigrateLocal ? (localStorage.getItem('fala-cefr-level') as CEFRLevel || remoteLevel) : remoteLevel;
 
@@ -904,7 +982,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         mirrorUserStateToLocalStorage(nextLevel, nextProgress, nextLoops);
         setCloudSyncStatus('ready');
 
-        if (shouldMigrateLocal) {
+        if (shouldMigrateLocal || shouldSyncMergedProgress) {
           void fetch('/api/user-state', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -942,7 +1020,8 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     try {
       const savedVocab = JSON.parse(localStorage.getItem(`fala-vocab-session-${dayKey}-${selectedLevel}`) || 'null');
       if (savedVocab) {
-        setVocabDeckIndex(Math.max(0, Math.min(vocabularyDecks.length - 1, Number(savedVocab.deckIndex) || 0)));
+        const savedDeckIndex = Math.max(0, Math.min(vocabularyDecks.length - 1, Number(savedVocab.deckIndex) || 0));
+        setVocabDeckIndex(vocabularyDecks[savedDeckIndex]?.level === selectedLevel ? savedDeckIndex : plannedVocabDeckIndex(selectedLevel));
         setKnownWords(Array.isArray(savedVocab.knownWords) ? savedVocab.knownWords : []);
         setVocabSentences(Array.isArray(savedVocab.sentences) ? savedVocab.sentences : []);
         setVocabPhase(['learn', 'quiz', 'review', 'done'].includes(savedVocab.phase) ? savedVocab.phase : 'learn');
@@ -950,8 +1029,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         setVocabQuizScore(Math.max(0, Math.min(10, Number(savedVocab.quizScore) || 0)));
         setRevealedReview(Array.isArray(savedVocab.revealedReview) ? savedVocab.revealedReview : []);
       } else {
-        const nextDeck = Number(localStorage.getItem(`fala-vocab-next-deck-${selectedLevel}`) || localStorage.getItem('fala-vocab-next-deck') || 0);
-        setVocabDeckIndex(Math.max(0, Math.min(vocabularyDecks.length - 1, nextDeck)));
+        setVocabDeckIndex(plannedVocabDeckIndex(selectedLevel));
       }
     } catch {
       setVocabDeckIndex(0);
@@ -996,7 +1074,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       setVerbComplete(false);
       setVerbMistakes([]);
     }
-  }, [dayKey, selectedLevel, vocabLoopByLevel]);
+  }, [dayKey, selectedLevel, vocabLoopByLevel, learningProgress]);
 
   function chooseLevel(level: CEFRLevel) {
     setSelectedLevel(level);
@@ -1013,6 +1091,18 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     setLearningProgress(next);
     localStorage.setItem('fala-learning-progress', JSON.stringify(next));
     void saveCloudState({ learningProgress: next });
+  }
+
+  function hasStudyActivity(record?: DailyLearningRecord) {
+    return Boolean(record?.studied || record?.completed || (record?.completedStages || 0) > 0);
+  }
+
+  function plannedVocabDeckIndex(level: CEFRLevel, progress: LearningProgress = learningProgress) {
+    const indices = vocabularyDecks.map((deck,index)=>deck.level===level?index:-1).filter(index=>index>=0);
+    if (!indices.length) return 0;
+    const levelProgress = progress[level];
+    const studiedDaysBeforeToday = Object.entries(levelProgress?.history || {}).filter(([date, record]) => date < dayKey && hasStudyActivity(record)).length;
+    return indices[studiedDaysBeforeToday % indices.length];
   }
 
   function completeJourneyStage(stageIndex: number) {
@@ -1075,10 +1165,9 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   function enterLevelJourney() {
     const targetLevel: VocabularyDeck['level'] = selectedLevel;
     const current = learningProgress[selectedLevel] || { lesson: 0, stage: 0, startedOn: dayKey, history: {} };
-    const availableDecks = vocabularyDecks.map((deck,index)=>deck.level===targetLevel?index:-1).filter(index=>index>=0);
-    const lessonDeck = availableDecks[current.lesson % availableDecks.length];
+    const lessonDeck = plannedVocabDeckIndex(targetLevel);
     if (!learningProgress[selectedLevel]) saveLearningProgress({ ...learningProgress, [selectedLevel]: current });
-    if (lessonDeck >= 0) setVocabDeckIndex(lessonDeck);
+    setVocabDeckIndex(lessonDeck);
     setReviewingStage(null);
     setMode('hub');
   }

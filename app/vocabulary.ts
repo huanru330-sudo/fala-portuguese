@@ -234,7 +234,7 @@ export function getVocabularyPractice(word: VocabularyWord): VocabularyPractice 
   };
 }
 
-export const vocabularyDecks: VocabularyDeck[] = [
+const baseVocabularyDecks: VocabularyDeck[] = [
   {
     "level": "A1",
     "topicZh": "最常用动词",
@@ -15055,4 +15055,91 @@ export const vocabularyDecks: VocabularyDeck[] = [
       }
     ]
   }
+];
+
+type CEFRLevel = VocabularyDeck['level'];
+type TermSeed = { pt: string; zh: string };
+
+const TARGET_DAILY_DECKS_PER_LEVEL = 120;
+const A1_TARGET_DAILY_DECKS = 100;
+
+function termSeeds(source: string): TermSeed[] {
+  return source.split('|').map(item => {
+    const [pt, zh] = item.split(':');
+    return { pt, zh };
+  });
+}
+
+const supplementalVocabularySeeds: Record<CEFRLevel, { bases: TermSeed[]; topics: TermSeed[]; example: (term: string) => string }> = {
+  A1: {
+    bases: termSeeds('nome:名称|número:数字|endereço:地址|horário:时间|preço:价格|pedido:点单|café:咖啡|água:水|suco:果汁|lanche:小吃|mesa:桌子|chave:钥匙|porta:门|janela:窗户|rua:街道|praça:广场|loja:商店|mercado:市场|ônibus:公交车|metrô:地铁|bilhete:票|mala:行李箱|quarto:房间|banheiro:卫生间|telefone:电话|mensagem:消息|amigo:朋友|família:家人|aula:课程|livro:书'),
+    topics: termSeeds('casa:家|escola:学校|cidade:城市|restaurante:餐厅|hotel:酒店|mercado:市场|farmácia:药店|banco:银行|aeroporto:机场|estação:车站|ônibus:公交车|metrô:地铁|trabalho:工作|aula:课堂|família:家庭|amigo:朋友|viagem:旅行|comida:食物|bebida:饮料|roupa:衣服|sapato:鞋|telefone:电话|internet:网络|música:音乐|filme:电影|praia:海滩|parque:公园|clima:天气|manhã:早上|noite:晚上|segunda-feira:周一|fim de semana:周末|aniversário:生日|festa:聚会|consulta:预约|compra:购物|presente:礼物|dinheiro:钱|cartão:银行卡|conta:账单|mapa:地图|foto:照片|porta:门|janela:窗|mesa:桌子|cadeira:椅子|cozinha:厨房|banheiro:卫生间|quarto:卧室|jardim:花园'),
+    example: term => `Eu preciso do ${term} hoje.`,
+  },
+  A2: {
+    bases: termSeeds('confirmação:确认|cancelamento:取消|reserva:预订|pagamento:付款|entrega:配送|troca:更换|devolução:退货|descrição:描述|comparação:比较|organização:安排|preparação:准备|escolha:选择|sugestão:建议|convite:邀请|mensagem:信息|agendamento:预约|atraso:延误|mudança:变更|necessidade:需要|explicação:解释|preferência:偏好|opção:选项|combinação:组合|solicitação:请求|orientação:指引|aviso:通知|documento:文件|formulário:表格|recebimento:收取|localização:位置'),
+    topics: termSeeds('viagem:旅行|consulta:预约|apartamento:公寓|trabalho:工作|mercado:市场|transporte:交通|aula:课程|reunião:会议|documento:文件|compra:购物|família:家庭|cidade:城市|restaurante:餐厅|hotel:酒店|farmácia:药店|banco:银行|escola:学校|curso:课程|agenda:日程|entrevista:面试|aluguel:租房|mudança:搬家|passeio:出游|clima:天气|saúde:健康|roupa:衣服|presente:礼物|evento:活动|serviço:服务|orçamento:预算|passagem:票务|mala:行李|quarto:房间|cozinha:厨房|internet:网络|telefone:电话|endereço:地址|preço:价格|horário:时间|cardápio:菜单|pedido:订单|conta:账单|pagamento:支付|remédio:药|exame:检查|seguro:保险|contrato:合同|vizinhança:邻里|academia:健身房|biblioteca:图书馆'),
+    example: term => `Preciso confirmar a ${term} antes de continuar.`,
+  },
+  B1: {
+    bases: termSeeds('planejamento:规划|decisão:决定|avaliação:评估|desenvolvimento:发展|participação:参与|colaboração:合作|negociação:协商|adaptação:适应|melhoria:改进|responsabilidade:责任|prioridade:优先事项|objetivo:目标|resultado:结果|experiência:经历|desafio:挑战|solução:解决方案|estratégia:策略|argumento:论点|opinião:观点|vantagem:优势|desvantagem:劣势|mudança:变化|crescimento:增长|aprendizagem:学习|oportunidade:机会|dificuldade:困难|proposta:提案|progresso:进展|impacto:影响|equilíbrio:平衡'),
+    topics: termSeeds('carreira:职业|estudo:学习|empresa:公司|equipe:团队|projeto:项目|comunidade:社区|tecnologia:技术|educação:教育|saúde:健康|moradia:住房|mobilidade:出行|ambiente:环境|cultura:文化|economia:经济|turismo:旅游|comunicação:沟通|rotina:日常|produtividade:效率|qualidade:质量|segurança:安全|consumo:消费|finanças:财务|empreendedorismo:创业|voluntariado:志愿服务|intercâmbio:交换学习|idiomas:语言|pesquisa:研究|treinamento:培训|liderança:领导力|cliente:客户|produto:产品|serviço:服务|prazo:期限|orçamento:预算|contrato:合同|mercado:市场|concorrência:竞争|inovação:创新|sustentabilidade:可持续|diversidade:多样性|bem-estar:身心健康|hábitos:习惯|alimentação:饮食|transporte público:公共交通|trabalho remoto:远程工作|aprendizado online:在线学习|planejamento urbano:城市规划|mídias sociais:社交媒体|notícias:新闻|política local:地方政策'),
+    example: term => `O texto apresenta a ${term} de forma clara.`,
+  },
+  B2: {
+    bases: termSeeds('análise:分析|implementação:实施|otimização:优化|integração:整合|monitoramento:监测|coordenação:协调|mediação:调解|expansão:扩展|redução:降低|aumento:增加|interpretação:解读|formulação:制定|execução:执行|revisão:审查|mensuração:衡量|comparação:比较|prevenção:预防|mitigação:缓解|consolidação:巩固|transformação:转型|adequação:适配|validação:验证|estruturação:结构化|posicionamento:定位|diferenciação:差异化|sistematização:系统化|alocação:分配|governança:治理|conformidade:合规|viabilidade:可行性'),
+    topics: termSeeds('dados:数据|processos:流程|políticas públicas:公共政策|mercado financeiro:金融市场|cadeia de suprimentos:供应链|experiência do usuário:用户体验|gestão de riscos:风险管理|capital humano:人力资本|infraestrutura:基础设施|privacidade:隐私|segurança digital:数字安全|educação inclusiva:包容教育|saúde preventiva:预防性健康|energia renovável:可再生能源|mobilidade urbana:城市出行|desigualdade social:社会不平等|produtividade:生产力|competitividade:竞争力|governança corporativa:公司治理|impacto ambiental:环境影响|comportamento do consumidor:消费者行为|comunicação institucional:机构沟通|transformação digital:数字化转型|planejamento estratégico:战略规划|gestão orçamentária:预算管理|qualidade regulatória:监管质量|inovação aberta:开放创新|relações internacionais:国际关系|mercado de trabalho:劳动市场|política educacional:教育政策|sistema de saúde:卫生系统|pesquisa aplicada:应用研究|aprendizagem contínua:持续学习|logística reversa:逆向物流|economia circular:循环经济|crédito ao consumidor:消费者信贷|gestão de crise:危机管理|responsabilidade social:社会责任|cultura organizacional:组织文化|inteligência competitiva:竞争情报|automação:自动化|atendimento ao cliente:客户服务|indicadores de desempenho:绩效指标|tomada de decisão:决策|negociação coletiva:集体谈判|regulação econômica:经济监管|mídia digital:数字媒体|pesquisa de mercado:市场调研|gestão de conhecimento:知识管理|desenvolvimento regional:区域发展'),
+    example: term => `A equipe discutiu a ${term} durante a reunião.`,
+  },
+  C1: {
+    bases: termSeeds('articulação:衔接|problematização:问题化|ressignificação:重新赋义|contextualização:语境化|fundamentação:论证基础|delimitação:界定|contraposição:对照|convergência:趋同|divergência:分歧|complexidade:复杂性|ambiguidade:模糊性|nuance:细微差别|pressuposto:前提|paradigma:范式|abordagem:方法路径|perspectiva:视角|implicação:含义|repercussão:反响|tensionamento:张力呈现|aprofundamento:深化|refinamento:精细化|síntese:综合|inferência:推断|coerência:连贯性|coesão:衔接性|recorte:切入点|desdobramento:后续发展|enquadramento:框架化|mediação:中介|legitimação:合法化'),
+    topics: termSeeds('discurso público:公共话语|produção acadêmica:学术生产|memória coletiva:集体记忆|identidade cultural:文化身份|política linguística:语言政策|prática pedagógica:教学实践|cidadania digital:数字公民|ética profissional:职业伦理|justiça social:社会正义|patrimônio cultural:文化遗产|governança global:全球治理|produção científica:科学生产|letramento crítico:批判性读写|subjetividade:主体性|participação democrática:民主参与|mediação cultural:文化调解|narrativa histórica:历史叙事|representação social:社会表征|produção simbólica:符号生产|responsabilidade institucional:机构责任|transformação social:社会转型|sustentabilidade urbana:城市可持续|desenvolvimento humano:人的发展|prática discursiva:话语实践|campo profissional:专业领域|sistema jurídico:法律体系|saúde coletiva:公共卫生|política migratória:移民政策|economia criativa:创意经济|memória institucional:机构记忆|formação docente:教师培养|pesquisa qualitativa:质性研究|produção cultural:文化生产|gestão pública:公共管理|transição energética:能源转型|inclusão social:社会包容|direitos humanos:人权|segurança alimentar:粮食安全|pensamento crítico:批判思维|cultura digital:数字文化|integração regional:区域一体化|regulação tecnológica:技术监管|experiência estética:审美体验|aprendizagem autônoma:自主学习|cooperação internacional:国际合作|análise documental:文献分析|mudança climática:气候变化|política habitacional:住房政策|epistemologia:认识论|argumentação complexa:复杂论证'),
+    example: term => `O ensaio examina a ${term} com rigor analítico.`,
+  },
+  C2: {
+    bases: termSeeds('hermenêutica:阐释学|epistemologia:认识论|dialética:辩证法|genealogia:谱系学|ontologia:本体论|teleologia:目的论|axiologia:价值论|intertextualidade:互文性|metalinguagem:元语言|performatividade:施为性|intersubjetividade:主体间性|historicidade:历史性|normatividade:规范性|materialidade:物质性|contingência:偶然性|transversalidade:横向贯通|reflexividade:反身性|paradoxalidade:悖论性|pluridimensionalidade:多维性|indeterminação:不确定性|problematização:问题化|desnaturalização:去自然化|recontextualização:再语境化|sofisticação:精密性|densidade conceitual:概念密度|economia argumentativa:论证经济性|ambivalência:双重性|assimetria:不对称性|disjunção:断裂|transposição:转置'),
+    topics: termSeeds('modernidade tardia:晚期现代性|capitalismo cognitivo:认知资本主义|racionalidade instrumental:工具理性|sujeito contemporâneo:当代主体|ordem discursiva:话语秩序|campo epistemológico:认识场域|crítica institucional:制度批判|estética política:政治美学|ética aplicada:应用伦理|governamentalidade:治理术|biopolítica:生命政治|semiótica social:社会符号学|teoria crítica:批判理论|filosofia da linguagem:语言哲学|história intelectual:思想史|sociologia do conhecimento:知识社会学|antropologia urbana:城市人类学|ecologia política:政治生态|economia comportamental:行为经济学|jurisprudência constitucional:宪法判例学|tecnociência:技术科学|algoritmização:算法化|colonialidade:殖民性|pós-humanismo:后人类主义|fenomenologia:现象学|pragmática discursiva:话语语用学|mediação algorítmica:算法中介|produção de subjetividade:主体性生产|arquivo cultural:文化档案|memória traumática:创伤记忆|justiça restaurativa:修复性正义|soberania digital:数字主权|transição civilizatória:文明转型|complexidade sistêmica:系统复杂性|risco sistêmico:系统性风险|regulação transnacional:跨国监管|imaginação política:政治想象|hegemonia cultural:文化霸权|conflito distributivo:分配冲突|epistemicídio:认识灭绝|cosmopolitismo crítico:批判世界主义|ética da alteridade:他者伦理|semiotização:符号化|governança algorítmica:算法治理|realismo crítico:批判实在论|teoria dos afetos:情感理论|cognição situada:情境认知|disputa hermenêutica:阐释争议|paradigma civilizatório:文明范式|imaginação sociológica:社会学想象'),
+    example: term => `A conferência explorou a ${term} em perspectiva comparada.`,
+  },
+};
+
+function buildSupplementalVocabularyDecks(baseDecks: VocabularyDeck[]) {
+  const existingWords = new Set(baseDecks.flatMap(deck => deck.words.map(word => word.pt.toLocaleLowerCase('pt-BR'))));
+  const decks: VocabularyDeck[] = [];
+
+  for (const level of ['A1','A2','B1','B2','C1','C2'] as CEFRLevel[]) {
+    const existingDeckCount = baseDecks.filter(deck => deck.level === level).length;
+    const targetDeckCount = level === 'A1' ? A1_TARGET_DAILY_DECKS : TARGET_DAILY_DECKS_PER_LEVEL;
+    const neededDecks = Math.max(0, targetDeckCount - existingDeckCount);
+    const config = supplementalVocabularySeeds[level];
+    const words: VocabularyWord[] = [];
+
+    for (const base of config.bases) {
+      for (const topic of config.topics) {
+        const pt = `${base.pt} de ${topic.pt}`;
+        const key = pt.toLocaleLowerCase('pt-BR');
+        if (existingWords.has(key)) continue;
+        existingWords.add(key);
+        words.push({ pt, zh: `${topic.zh}的${base.zh}`, example: config.example(pt) });
+        if (words.length >= neededDecks * 10) break;
+      }
+      if (words.length >= neededDecks * 10) break;
+    }
+
+    for (let index = 0; index < neededDecks; index += 1) {
+      decks.push({
+        level,
+        topicZh: `${level} 三个月补充词库 ${index + 1}`,
+        topicPt: `${level} vocabulário expandido ${index + 1}`,
+        words: words.slice(index * 10, index * 10 + 10),
+      });
+    }
+  }
+
+  return decks;
+}
+
+export const vocabularyDecks: VocabularyDeck[] = [
+  ...baseVocabularyDecks,
+  ...buildSupplementalVocabularyDecks(baseVocabularyDecks),
 ];
