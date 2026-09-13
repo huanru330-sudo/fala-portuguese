@@ -856,7 +856,6 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const daysElapsedThisMonth = new Date().getDate();
   const studiedThisMonth = Array.from(studiedDayKeys).filter(key => key.startsWith(currentMonthPrefix)).length;
   const monthlyCompletionRate = Math.min(100, Math.round((studiedThisMonth / daysElapsedThisMonth) * 100));
-  const profileNickname = 'Huanru';
   const profileUi = language === 'zh' ? {
     title: '我的学习',
     subtitle: '今天的状态、等级进度和词汇掌握都放在这里。',
@@ -1673,7 +1672,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   </div>;
 
   if (mode === 'profile') return <div className="screen-enter min-h-[790px] px-6 pb-28 pt-7">
-    <header className="profile-header"><div><p className="eyebrow">{profileUi.nickname}</p><h1>{profileNickname}</h1><small>{profileUi.subtitle}</small></div><span>{selectedLevel}</span></header>
+    <header className="profile-header"><div><p className="eyebrow">{profileUi.title}</p><h1>{language==='zh'?'学习概览':'Resumo'}</h1><small>{profileUi.subtitle}</small></div><span>{selectedLevel}</span></header>
     <section className={`account-sync mt-4 ${cloudSyncStatus}`}>
       <div><strong>{accountSyncMessage[0]}</strong><span>{accountSyncMessage[1]}</span></div>
       {cloudSyncStatus === 'guest' && <a href="/signin-with-chatgpt?return_to=/" target="_top">{accountSyncUi.action}</a>}
