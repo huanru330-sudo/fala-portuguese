@@ -15139,7 +15139,9 @@ function buildSupplementalVocabularyDecks(baseDecks: VocabularyDeck[]) {
   return decks;
 }
 
-export const vocabularyDecks: VocabularyDeck[] = [
-  ...baseVocabularyDecks,
-  ...buildSupplementalVocabularyDecks(baseVocabularyDecks),
-];
+const supplementalVocabularyDecks = buildSupplementalVocabularyDecks(baseVocabularyDecks);
+
+export const vocabularyDecks: VocabularyDeck[] = (['A1','A2','B1','B2','C1','C2'] as CEFRLevel[]).flatMap(level => [
+  ...supplementalVocabularyDecks.filter(deck => deck.level === level),
+  ...baseVocabularyDecks.filter(deck => deck.level === level),
+]);

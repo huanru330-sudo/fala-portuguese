@@ -513,7 +513,7 @@ const genderQuestions: Array<{ word: string; gender: GenderValue; article: strin
 
 const GENDER_STAGE_SIZE = 10;
 const GENDER_STAGE_COUNT = genderQuestions.length / GENDER_STAGE_SIZE;
-const VOCAB_CONTENT_VERSION = 'oi-v6-7200-20260913';
+const VOCAB_CONTENT_VERSION = 'oi-v7-expanded-first-20260913';
 const PROFILE_CALENDAR_START = new Date(2026, 5, 1);
 const PROFILE_CALENDAR_MONTH_COUNT = 14;
 
