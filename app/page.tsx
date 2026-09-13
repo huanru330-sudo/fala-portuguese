@@ -137,7 +137,7 @@ type VocabLoopStats = {
   mistakeWords: string[];
   lastCompletedDate: string;
 };
-type DailyLearningRecord = { completedStages: number; completed: boolean };
+type DailyLearningRecord = { completedStages: number; completed: boolean; studied?: boolean };
 type LevelLearningProgress = { lesson: number; stage: number; startedOn: string; history: Record<string, DailyLearningRecord> };
 type LearningProgress = Partial<Record<CEFRLevel, LevelLearningProgress>>;
 type VocabLoopByLevel = Partial<Record<CEFRLevel, VocabLoopStats>>;
@@ -176,7 +176,7 @@ function normalizeLearningProgress(value: unknown): LearningProgress {
     const history = Object.fromEntries(Object.entries(historySource).map(([date, record]) => {
       const completedStages = Math.max(0, Math.min(JOURNEY_STAGE_COUNT, Number(record.completedStages) || 0));
       const completed = Boolean(record.completed) || completedStages >= JOURNEY_STAGE_COUNT;
-      return [date, { completedStages: completed ? JOURNEY_STAGE_COUNT : completedStages, completed }];
+      return [date, { completedStages: completed ? JOURNEY_STAGE_COUNT : completedStages, completed, studied: Boolean(record.studied) || completed || completedStages > 0 }];
     }));
 
     migrated[level] = {
@@ -514,6 +514,13 @@ const genderQuestions: Array<{ word: string; gender: GenderValue; article: strin
 const GENDER_STAGE_SIZE = 10;
 const GENDER_STAGE_COUNT = genderQuestions.length / GENDER_STAGE_SIZE;
 const VOCAB_CONTENT_VERSION = 'oi-v5-2600-20260912';
+const PROFILE_CALENDAR_START = new Date(2026, 5, 1);
+const PROFILE_CALENDAR_MONTH_COUNT = 14;
+
+function getProfileMonthIndex(date = new Date()) {
+  const monthIndex = (date.getFullYear() - PROFILE_CALENDAR_START.getFullYear()) * 12 + date.getMonth() - PROFILE_CALENDAR_START.getMonth();
+  return Math.max(0, Math.min(PROFILE_CALENDAR_MONTH_COUNT - 1, monthIndex));
+}
 
 function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onHome: () => void }) {
   const [mode, setMode] = useState<PracticeMode>('level-select');
@@ -555,11 +562,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const [vocabLoopByLevel, setVocabLoopByLevel] = useState<VocabLoopByLevel>({});
   const [remoteUser, setRemoteUser] = useState<RemoteUser|null>(null);
   const [cloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatus>('checking');
-  const [profileMonthIndex, setProfileMonthIndex] = useState(() => {
-    const today = new Date();
-    const monthIndex = (today.getFullYear() - 2026) * 12 + today.getMonth() - 5;
-    return Math.max(0, Math.min(13, monthIndex));
-  });
+  const [profileMonthIndex, setProfileMonthIndex] = useState(() => getProfileMonthIndex());
   const speakingRecorderRef = useRef<MediaRecorder|null>(null);
   const speakingStreamRef = useRef<MediaStream|null>(null);
   const speakingChunksRef = useRef<Blob[]>([]);
@@ -660,13 +663,23 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     afterAll: 'Depois das lições deste nível, o app entra automaticamente no próximo ciclo.',
     nextCycle: 'Próximo ciclo',
   };
-  const completedDayKeys = new Set(Object.values(learningProgress).flatMap(progress => Object.entries(progress?.history || {}).filter(([, record]) => record.completed).map(([date]) => date)));
-  const activeCompletedDays = Object.values(activeLearningProgress.history).filter(record => record.completed).length;
-  const latestCompletedDay = Array.from(completedDayKeys).filter(key => key <= dayKey).sort().at(-1);
+  const allLearningDayRecords = Object.values(learningProgress).reduce<Record<string, DailyLearningRecord>>((records, progress) => {
+    for (const [date, record] of Object.entries(progress?.history || {})) {
+      const current = records[date] || { completedStages: 0, completed: false, studied: false };
+      records[date] = {
+        completedStages: Math.max(current.completedStages, record.completedStages || 0),
+        completed: current.completed || record.completed,
+        studied: current.studied || record.studied || record.completed || (record.completedStages || 0) > 0,
+      };
+    }
+    return records;
+  }, {});
+  const studiedDayKeys = new Set(Object.entries(allLearningDayRecords).filter(([, record]) => record.studied || record.completed || record.completedStages > 0).map(([date]) => date));
+  const latestStudiedDay = Array.from(studiedDayKeys).filter(key => key <= dayKey).sort().at(-1);
   let profileStreakDays = 0;
-  if (latestCompletedDay) {
-    const streakDate = new Date(`${latestCompletedDay}T00:00:00`);
-    while (completedDayKeys.has(getLocalDayKey(streakDate))) {
+  if (latestStudiedDay) {
+    const streakDate = new Date(`${latestStudiedDay}T00:00:00`);
+    while (studiedDayKeys.has(getLocalDayKey(streakDate))) {
       profileStreakDays += 1;
       streakDate.setDate(streakDate.getDate() - 1);
     }
@@ -674,8 +687,8 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const currentLevelProgress = levelDeckIndices.length ? Math.min(100, Math.round((activeLearningProgress.lesson / levelDeckIndices.length) * 100)) : 0;
   const currentMonthPrefix = dayKey.slice(0, 7);
   const daysElapsedThisMonth = new Date().getDate();
-  const completedThisMonth = Array.from(completedDayKeys).filter(key => key.startsWith(currentMonthPrefix)).length;
-  const monthlyCompletionRate = Math.min(100, Math.round((completedThisMonth / daysElapsedThisMonth) * 100));
+  const studiedThisMonth = Array.from(studiedDayKeys).filter(key => key.startsWith(currentMonthPrefix)).length;
+  const monthlyCompletionRate = Math.min(100, Math.round((studiedThisMonth / daysElapsedThisMonth) * 100));
   const profileNickname = 'Huanru';
   const profileUi = language === 'zh' ? {
     title: '我的学习',
@@ -690,7 +703,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     currentLesson: '当前课程',
     learnedWords: '已学词汇',
     reviewWords: '待复习词',
-    monthRate: '本月完成率',
+    monthRate: '本月学习率',
     vocabulary: '词汇掌握',
     practice: '练习记录',
     settings: '设置',
@@ -713,7 +726,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     currentLesson: 'Lição atual',
     learnedWords: 'Palavras estudadas',
     reviewWords: 'Para revisar',
-    monthRate: 'Mês concluído',
+    monthRate: 'Dias estudados',
     vocabulary: 'Vocabulário',
     practice: 'Registros',
     settings: 'Configurações',
@@ -744,8 +757,8 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       signOut: 'Sair',
     };
   const accountSyncMessage = accountSyncUi[cloudSyncStatus];
-  const profileCalendarMonths = Array.from({ length: 14 }, (_, monthOffset) => {
-    const date = new Date(2026, 5 + monthOffset, 1);
+  const profileCalendarMonths = Array.from({ length: PROFILE_CALENDAR_MONTH_COUNT }, (_, monthOffset) => {
+    const date = new Date(PROFILE_CALENDAR_START.getFullYear(), PROFILE_CALENDAR_START.getMonth() + monthOffset, 1);
     const month = date.getMonth();
     const year = date.getFullYear();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -753,12 +766,14 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     const days = Array.from({ length: daysInMonth }, (_, dayIndex) => {
       const day = dayIndex + 1;
       const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const record = activeLearningProgress.history[key];
+      const record = allLearningDayRecords[key];
       return { key, day, record };
     });
-    return { key: `${year}-${month + 1}`, label: `${year}.${String(month + 1).padStart(2, '0')}`, firstWeekday, days };
+    const label = language === 'zh' ? `${year}年${month + 1}月` : date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return { key: `${year}-${month + 1}`, label, firstWeekday, days };
   });
   const profileCalendarMonth = profileCalendarMonths[profileMonthIndex] || profileCalendarMonths[0];
+  const profileWeekdays = language === 'zh' ? ['日','一','二','三','四','五','六'] : ['dom','seg','ter','qua','qui','sex','sáb'];
   const journeyStages: Array<{ mode: PracticeMode; icon: string; title: string; meta: string }> = [
     { mode: 'vocab', icon: 'Aa', title: language==='zh'?`${selectedLevel} 词汇热身`:`Vocabulário ${selectedLevel}`, meta: language==='zh'?'词义、例句与词形':'Significado, frase e forma' },
     { mode: 'listening', icon: '◖))', title: skillUi.listening, meta: skillUi.listeningMeta },
@@ -1010,7 +1025,24 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         ...current,
         lesson: finishedDay ? current.lesson + 1 : current.lesson,
         stage: finishedDay ? 0 : stageIndex + 1,
-        history: { ...current.history, [dayKey]: { completedStages: stageIndex + 1, completed: finishedDay } },
+        history: { ...current.history, [dayKey]: { completedStages: stageIndex + 1, completed: finishedDay, studied: true } },
+      };
+      const next = { ...previous, [selectedLevel]: updated };
+      localStorage.setItem('fala-learning-progress', JSON.stringify(next));
+      void saveCloudState({ learningProgress: next });
+      return next;
+    });
+  }
+
+  function markStudyDay() {
+    setLearningProgress(previous => {
+      const current = previous[selectedLevel] || { lesson: 0, stage: 0, startedOn: dayKey, history: {} };
+      const todayRecord = current.history[dayKey];
+      if (todayRecord?.studied || todayRecord?.completed || (todayRecord?.completedStages || 0) > 0) return previous;
+
+      const updated: LevelLearningProgress = {
+        ...current,
+        history: { ...current.history, [dayKey]: { completedStages: 0, completed: false, studied: true } },
       };
       const next = { ...previous, [selectedLevel]: updated };
       localStorage.setItem('fala-learning-progress', JSON.stringify(next));
@@ -1023,6 +1055,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     const completedStages = todayLearningRecord?.completedStages || 0;
     const canOpen = Boolean(todayLearningRecord?.completed) || stageIndex <= activeLearningProgress.stage || stageIndex < completedStages;
     if (!canOpen) return;
+    markStudyDay();
     const isReview = Boolean(todayLearningRecord?.completed) || stageIndex < activeLearningProgress.stage;
     setReviewingStage(isReview ? stageIndex : null);
     if (nextMode === 'listening' || nextMode === 'reading') setComprehensionAnswer(null);
@@ -1059,6 +1092,11 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     stopSpeakingRecording();
     setShowSpeakingModel(false);
     setSpeakingRecordingError('');
+  }
+
+  function openProfile() {
+    setProfileMonthIndex(getProfileMonthIndex());
+    setMode('profile');
   }
 
   function setActiveAudioKey(key: string) {
@@ -1375,7 +1413,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     <section className="journey-status mt-6"><div><span>{language==='zh'?'今日闯关进度':'Progresso de hoje'}</span><b>{todayLearningRecord?.completedStages || 0}/{journeyStages.length}</b></div><div><span style={{width:`${Math.max(5, ((todayLearningRecord?.completedStages || 0) / journeyStages.length) * 100)}%`}}/></div><small>{todayLearningRecord?.completed?(language==='zh'?'今天的任务已完成；四关均可点击复习，明天自动进入下一课。':'Tarefa concluída. Você pode rever qualquer fase; amanhã continuará na próxima lição.'):(language==='zh'?'完成一关自动解锁下一关；已完成关卡可以返回复习且不重复计入进度。':'Conclua uma fase para liberar a próxima. Fases concluídas podem ser revistas sem duplicar o progresso.')}</small></section>
     <section className="learning-history mt-4"><div className="learning-history-title"><strong>{language==='zh'?'最近7天':'Últimos 7 dias'}</strong><small>{language==='zh'?'完成 · 学习中 · 未学习':'Concluído · Em curso · Sem estudo'}</small></div><div className="learning-history-days">{recentLearningDays.map(item=><div key={item.key} className={item.beforeStart?'future':item.record?.completed?'done':item.record?'partial':'missed'}><span>{item.day}</span><b>{item.record?.completed?'✓':item.record?item.record.completedStages:'·'}</b><small>{item.date}</small></div>)}</div></section>
     <div className="journey-map mt-7">{journeyStages.map((stage,index)=>{const completed=(todayLearningRecord?.completedStages||0)>index; const locked=!todayLearningRecord?.completed&&index>activeLearningProgress.stage; const current=!todayLearningRecord?.completed&&index===activeLearningProgress.stage; return <div key={stage.mode} className={`journey-node node-${index+1} ${completed?'complete':''} ${locked?'locked':''} ${current?'current':''}`}><button disabled={locked} onClick={()=>openJourneyStage(index,stage.mode)}><span>{completed?'✓':locked?'🔒':stage.icon}</span><b>{index+1}</b></button><div><small>{completed?(language==='zh'?'已完成 · 点击复习':'Concluído · Rever'):locked?(language==='zh'?'完成上一关解锁':'Complete a fase anterior'):(language==='zh'?`当前 · 第 ${index+1} 关`:`Atual · Fase ${index+1}`)}</small><strong>{stage.title}</strong><p>{stage.meta}</p></div></div>})}</div>
-    <Nav c={c} active="practice" onPractice={()=>setMode('hub')} onVerbs={()=>setMode('verbs')} onProfile={()=>setMode('profile')}/>
+    <Nav c={c} active="practice" onPractice={()=>setMode('hub')} onVerbs={()=>setMode('verbs')} onProfile={openProfile}/>
   </div>;
 
   if (mode === 'profile') return <div className="screen-enter min-h-[790px] px-6 pb-28 pt-7">
@@ -1387,7 +1425,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     </section>
     <section className="profile-overview mt-6">
       <article><small>{profileUi.streak}</small><strong>{profileStreakDays}</strong><span>{language==='zh'?'天':'dias'}</span></article>
-      <article><small>{profileUi.totalDays}</small><strong>{completedDayKeys.size}</strong><span>{language==='zh'?'天':'dias'}</span></article>
+      <article><small>{profileUi.totalDays}</small><strong>{studiedDayKeys.size}</strong><span>{language==='zh'?'天':'dias'}</span></article>
       <article className={todayLearningRecord?.completed?'done':''}><small>{profileUi.todayDone}</small><strong>{todayLearningRecord?.completed?'✓':(todayLearningRecord?.completedStages || 0)}</strong><span>{todayLearningRecord?.completed?profileUi.done:profileUi.pending}</span></article>
     </section>
     <section className="profile-card mt-4">
@@ -1401,14 +1439,15 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     </section>
     <section className="profile-calendar mt-4">
       <div className="profile-calendar-head">
-        <button type="button" onClick={()=>setProfileMonthIndex(index=>Math.max(0,index-1))} disabled={profileMonthIndex===0}>↑</button>
-        <div><strong>{profileUi.checkinCalendar}</strong><span>{profileCalendarMonth.label} · {profileUi.checkinRange}</span></div>
-        <button type="button" onClick={()=>setProfileMonthIndex(index=>Math.min(profileCalendarMonths.length-1,index+1))} disabled={profileMonthIndex===profileCalendarMonths.length-1}>↓</button>
+        <button type="button" onClick={()=>setProfileMonthIndex(index=>Math.max(0,index-1))} disabled={profileMonthIndex===0}>‹</button>
+        <div><strong>{profileCalendarMonth.label}</strong><span>{profileUi.checkinCalendar} · {profileUi.checkinRange}</span></div>
+        <button type="button" onClick={()=>setProfileMonthIndex(index=>Math.min(profileCalendarMonths.length-1,index+1))} disabled={profileMonthIndex===profileCalendarMonths.length-1}>›</button>
       </div>
       <div className="profile-calendar-legend"><span className="done"/>{language==='zh'?'已完成':'Concluído'}<span className="partial"/>{language==='zh'?'学习中':'Em curso'}<span/>{language==='zh'?'未学习':'Sem estudo'}</div>
       <div className="profile-month-grid">
+        {profileWeekdays.map(day => <b key={day}>{day}</b>)}
         {Array.from({length: profileCalendarMonth.firstWeekday}).map((_, index) => <i key={`empty-${index}`}/>)}
-        {profileCalendarMonth.days.map(item => <span key={item.key} className={item.record?.completed?'done':item.record?'partial':''}>{item.day}</span>)}
+        {profileCalendarMonth.days.map(item => <span key={item.key} className={item.record?.completed?'done':item.record?.studied || item.record?.completedStages ? 'partial' : ''}>{item.day}</span>)}
       </div>
     </section>
     <section className="profile-two-col mt-4">
@@ -1420,7 +1459,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       <div><span>{profileUi.level}</span><strong>{selectedLevel}</strong></div>
       <div><span>{profileUi.dailyGoal}</span><strong>10 {language==='zh'?'词 / 天':'palavras/dia'}</strong></div>
     </section>
-    <Nav c={c} active="profile" onPractice={()=>setMode('hub')} onVerbs={()=>setMode('verbs')} onProfile={()=>setMode('profile')}/>
+    <Nav c={c} active="profile" onPractice={()=>setMode('hub')} onVerbs={()=>setMode('verbs')} onProfile={openProfile}/>
   </div>;
 
   if (mode === 'skills') return <div className="screen-enter min-h-[790px] px-6 pb-8 pt-7">

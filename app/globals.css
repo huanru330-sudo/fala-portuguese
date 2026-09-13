@@ -986,8 +986,10 @@ button:focus-visible {
 .profile-calendar-legend span.done { background: var(--tile-blue); }
 .profile-calendar-legend span.partial { background: #edf1bd; box-shadow: inset 0 0 0 1px rgba(18,61,130,.14); }
 .profile-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 12px; }
+.profile-month-grid b,
 .profile-month-grid i,
 .profile-month-grid span { display: grid; aspect-ratio: 1; place-items: center; border-radius: 11px; font-size: 9px; font-style: normal; font-weight: 950; }
+.profile-month-grid b { aspect-ratio: auto; min-height: 18px; border-radius: 7px; color: rgba(23,52,99,.48); font-size: 8px; }
 .profile-month-grid i { background: transparent; }
 .profile-month-grid span { background: rgba(18,61,130,.08); color: rgba(23,52,99,.45); }
 .profile-month-grid span.partial { background: #edf1bd; color: var(--tile-blue); }
