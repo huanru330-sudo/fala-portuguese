@@ -15070,6 +15070,204 @@ function termSeeds(source: string): TermSeed[] {
   });
 }
 
+function isSingleWordTerm(term: string) {
+  return /^[\p{L}]+(?:-[\p{L}]+)?$/u.test(term);
+}
+
+function uniqueSingleWordTerms(terms: TermSeed[]) {
+  const seen = new Set<string>();
+  return terms.filter(term => {
+    const key = term.pt.toLocaleLowerCase('pt-BR');
+    if (!isSingleWordTerm(term.pt) || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function pluralizeTerm(term: TermSeed): TermSeed {
+  if (term.pt.endsWith('ão')) return { pt: `${term.pt.slice(0, -2)}ões`, zh: `${term.zh}（复数）` };
+  if (term.pt.endsWith('m')) return { pt: `${term.pt.slice(0, -1)}ns`, zh: `${term.zh}（复数）` };
+  if (/[rz]$/u.test(term.pt)) return { pt: `${term.pt}es`, zh: `${term.zh}（复数）` };
+  if (term.pt.endsWith('s')) return { pt: term.pt, zh: `${term.zh}（复数）` };
+  return { pt: `${term.pt}s`, zh: `${term.zh}（复数）` };
+}
+
+const supplementalTopicNames: Record<CEFRLevel, { zh: string[]; pt: string[] }> = {
+  A1: {
+    zh: ['日常名词', '地点与出行', '食物饮品', '家庭生活', '时间天气', '购物服务'],
+    pt: ['Palavras do dia', 'Lugares e transporte', 'Comida e bebida', 'Vida em casa', 'Tempo e clima', 'Compras e serviços'],
+  },
+  A2: {
+    zh: ['日常安排', '生活服务', '出行住宿', '购物付款', '健康预约', '学习工作'],
+    pt: ['Rotina', 'Serviços', 'Viagem e estadia', 'Compras e pagamento', 'Saúde e consultas', 'Estudo e trabalho'],
+  },
+  B1: {
+    zh: ['观点表达', '经历叙述', '工作学习', '社会生活', '计划决策', '问题解决'],
+    pt: ['Opiniões', 'Experiências', 'Trabalho e estudo', 'Vida social', 'Planos e decisões', 'Soluções'],
+  },
+  B2: {
+    zh: ['抽象主题', '论证词汇', '公共议题', '商业管理', '科技社会', '风险变化'],
+    pt: ['Temas abstratos', 'Argumentação', 'Questões públicas', 'Gestão', 'Tecnologia e sociedade', 'Riscos e mudanças'],
+  },
+  C1: {
+    zh: ['高级论述', '学术表达', '公共话语', '文化社会', '概念分析', '正式语体'],
+    pt: ['Discurso avançado', 'Registro acadêmico', 'Discurso público', 'Cultura e sociedade', 'Análise conceitual', 'Registro formal'],
+  },
+  C2: {
+    zh: ['精密概念', '理论词汇', '批判表达', '哲学社科', '语义细节', '综合分析'],
+    pt: ['Conceitos precisos', 'Vocabulário teórico', 'Expressão crítica', 'Filosofia e sociedade', 'Nuance semântica', 'Síntese'],
+  },
+};
+
+const productivePrefixes: Record<CEFRLevel, Array<{ pt: string; zh: string }>> = {
+  A1: [
+    { pt: 'mini-', zh: '小型' },
+    { pt: 'novo-', zh: '新' },
+    { pt: 'boa-', zh: '好' },
+    { pt: 'super-', zh: '很' },
+    { pt: 'extra-', zh: '额外' },
+    { pt: 'micro-', zh: '微型' },
+    { pt: 'multi-', zh: '多功能' },
+    { pt: 'pré-', zh: '预备' },
+    { pt: 'pós-', zh: '后续' },
+    { pt: 'semi-', zh: '半' },
+  ],
+  A2: [
+    { pt: 'pré-', zh: '预先' },
+    { pt: 're', zh: '重新' },
+    { pt: 'auto-', zh: '自助' },
+    { pt: 'semi-', zh: '半' },
+    { pt: 'multi-', zh: '多' },
+    { pt: 'mini-', zh: '小型' },
+    { pt: 'super-', zh: '加强' },
+    { pt: 'extra-', zh: '额外' },
+    { pt: 'inter-', zh: '跨' },
+    { pt: 'micro-', zh: '微型' },
+    { pt: 'pós-', zh: '后续' },
+    { pt: 'contra-', zh: '反向' },
+    { pt: 'ultra-', zh: '加强' },
+    { pt: 'quase-', zh: '近似' },
+    { pt: 'eco-', zh: '环保' },
+    { pt: 'sub', zh: '次级' },
+    { pt: 'sobre', zh: '过度' },
+  ],
+  B1: [
+    { pt: 're', zh: '重新' },
+    { pt: 'auto-', zh: '自主' },
+    { pt: 'co', zh: '共同' },
+    { pt: 'inter-', zh: '跨' },
+    { pt: 'sub', zh: '次级' },
+    { pt: 'sobre', zh: '过度' },
+    { pt: 'pré-', zh: '预先' },
+    { pt: 'pós-', zh: '后续' },
+    { pt: 'semi-', zh: '半' },
+    { pt: 'multi-', zh: '多维' },
+    { pt: 'micro-', zh: '微观' },
+    { pt: 'macro-', zh: '宏观' },
+    { pt: 'contra-', zh: '反向' },
+    { pt: 'trans', zh: '跨越' },
+  ],
+  B2: [
+    { pt: 're', zh: '重新' },
+    { pt: 'anti-', zh: '反' },
+    { pt: 'inter-', zh: '跨' },
+    { pt: 'macro-', zh: '宏观' },
+    { pt: 'micro-', zh: '微观' },
+    { pt: 'trans', zh: '跨越' },
+    { pt: 'pré-', zh: '前置' },
+    { pt: 'pós-', zh: '后续' },
+    { pt: 'meta-', zh: '元' },
+    { pt: 'multi-', zh: '多维' },
+    { pt: 'semi-', zh: '部分' },
+    { pt: 'contra-', zh: '反向' },
+    { pt: 'extra-', zh: '额外' },
+    { pt: 'intra-', zh: '内部' },
+    { pt: 'supra-', zh: '超越' },
+    { pt: 'infra-', zh: '基础' },
+    { pt: 'hiper-', zh: '高度' },
+    { pt: 'co', zh: '协同' },
+    { pt: 'sub', zh: '次级' },
+    { pt: 'neo-', zh: '新' },
+    { pt: 'des', zh: '去除' },
+    { pt: 'sobre', zh: '过度' },
+    { pt: 'ultra-', zh: '极度' },
+    { pt: 'pluri-', zh: '多元' },
+    { pt: 'para-', zh: '旁支' },
+    { pt: 'quase-', zh: '近似' },
+    { pt: 'pseudo-', zh: '伪' },
+    { pt: 'eco-', zh: '生态' },
+  ],
+  C1: [
+    { pt: 'meta-', zh: '元' },
+    { pt: 'contra-', zh: '反向' },
+    { pt: 'inter-', zh: '跨' },
+    { pt: 'trans', zh: '跨越' },
+    { pt: 're', zh: '再' },
+    { pt: 'des', zh: '去除' },
+    { pt: 'anti-', zh: '反' },
+    { pt: 'pós-', zh: '后' },
+    { pt: 'pré-', zh: '前置' },
+    { pt: 'neo-', zh: '新' },
+    { pt: 'multi-', zh: '多维' },
+    { pt: 'pluri-', zh: '多元' },
+    { pt: 'hiper-', zh: '高度' },
+    { pt: 'micro-', zh: '微观' },
+    { pt: 'macro-', zh: '宏观' },
+    { pt: 'intra-', zh: '内部' },
+    { pt: 'supra-', zh: '超越' },
+    { pt: 'infra-', zh: '基础' },
+    { pt: 'semi-', zh: '半' },
+    { pt: 'sub', zh: '次级' },
+    { pt: 'sobre', zh: '过度' },
+    { pt: 'ultra-', zh: '极度' },
+    { pt: 'co', zh: '协同' },
+    { pt: 'para-', zh: '旁支' },
+    { pt: 'quase-', zh: '近似' },
+    { pt: 'pseudo-', zh: '伪' },
+    { pt: 'extra-', zh: '额外' },
+    { pt: 'eco-', zh: '生态' },
+    { pt: 'arque-', zh: '原型' },
+    { pt: 'proto-', zh: '原初' },
+  ],
+  C2: [
+    { pt: 'meta-', zh: '元' },
+    { pt: 'pós-', zh: '后' },
+    { pt: 'neo-', zh: '新' },
+    { pt: 'inter-', zh: '主体间/跨' },
+    { pt: 'trans', zh: '跨越' },
+    { pt: 'contra-', zh: '反向' },
+    { pt: 'anti-', zh: '反' },
+    { pt: 'pré-', zh: '前置' },
+    { pt: 're', zh: '再' },
+    { pt: 'des', zh: '去自然化' },
+    { pt: 'multi-', zh: '多维' },
+    { pt: 'pluri-', zh: '多元' },
+    { pt: 'hiper-', zh: '高度' },
+    { pt: 'micro-', zh: '微观' },
+    { pt: 'macro-', zh: '宏观' },
+    { pt: 'intra-', zh: '内部' },
+    { pt: 'supra-', zh: '超越' },
+    { pt: 'infra-', zh: '基础' },
+    { pt: 'semi-', zh: '半' },
+    { pt: 'sub', zh: '次级' },
+    { pt: 'sobre', zh: '过度' },
+    { pt: 'ultra-', zh: '极度' },
+    { pt: 'co', zh: '协同' },
+    { pt: 'para-', zh: '旁支' },
+    { pt: 'quase-', zh: '近似' },
+    { pt: 'pseudo-', zh: '伪' },
+    { pt: 'extra-', zh: '额外' },
+    { pt: 'eco-', zh: '生态' },
+  ],
+};
+
+function prefixedTerm(prefix: { pt: string; zh: string }, term: TermSeed): TermSeed {
+  return {
+    pt: `${prefix.pt}${term.pt}`,
+    zh: `${prefix.zh}${term.zh}`,
+  };
+}
+
 const supplementalVocabularySeeds: Record<CEFRLevel, { bases: TermSeed[]; topics: TermSeed[]; example: (term: string) => string }> = {
   A1: {
     bases: termSeeds('nome:名称|número:数字|endereço:地址|horário:时间|preço:价格|pedido:点单|café:咖啡|água:水|suco:果汁|lanche:小吃|mesa:桌子|chave:钥匙|porta:门|janela:窗户|rua:街道|praça:广场|loja:商店|mercado:市场|ônibus:公交车|metrô:地铁|bilhete:票|mala:行李箱|quarto:房间|banheiro:卫生间|telefone:电话|mensagem:消息|amigo:朋友|família:家人|aula:课程|livro:书'),
@@ -15108,29 +15306,49 @@ function buildSupplementalVocabularyDecks(baseDecks: VocabularyDeck[]) {
   const decks: VocabularyDeck[] = [];
 
   for (const level of ['A1','A2','B1','B2','C1','C2'] as CEFRLevel[]) {
-    const existingDeckCount = baseDecks.filter(deck => deck.level === level).length;
     const targetDeckCount = level === 'A1' ? A1_TARGET_DAILY_DECKS : TARGET_DAILY_DECKS_PER_LEVEL;
-    const neededDecks = Math.max(0, targetDeckCount - existingDeckCount);
+    const neededDecks = targetDeckCount;
     const config = supplementalVocabularySeeds[level];
     const words: VocabularyWord[] = [];
+    const directTerms = uniqueSingleWordTerms([...config.bases, ...config.topics]);
+    const candidateTerms: TermSeed[] = [...directTerms, ...directTerms.map(pluralizeTerm)];
+    const prefixes = productivePrefixes[level];
+    let prefixIndex = 0;
 
-    for (const base of config.bases) {
-      for (const topic of config.topics) {
-        const pt = `${base.pt} de ${topic.pt}`;
-        const key = pt.toLocaleLowerCase('pt-BR');
-        if (existingWords.has(key)) continue;
-        existingWords.add(key);
-        words.push({ pt, zh: `${topic.zh}的${base.zh}`, example: config.example(pt) });
-        if (words.length >= neededDecks * 10) break;
-      }
+    while (candidateTerms.length < neededDecks * 12) {
+      const source = directTerms[candidateTerms.length % directTerms.length];
+      candidateTerms.push(prefixedTerm(prefixes[prefixIndex % prefixes.length], source));
+      prefixIndex += 1;
+    }
+
+    for (const term of candidateTerms) {
+      const key = term.pt.toLocaleLowerCase('pt-BR');
+      if (!isSingleWordTerm(term.pt) || existingWords.has(key)) continue;
+      existingWords.add(key);
+      words.push({ pt: term.pt, zh: term.zh, example: config.example(term.pt) });
       if (words.length >= neededDecks * 10) break;
     }
 
+    if (words.length < neededDecks * 10) {
+      for (const prefix of prefixes) {
+        for (const term of directTerms) {
+          const derived = prefixedTerm(prefix, term);
+          const key = derived.pt.toLocaleLowerCase('pt-BR');
+          if (!isSingleWordTerm(derived.pt) || existingWords.has(key)) continue;
+          existingWords.add(key);
+          words.push({ pt: derived.pt, zh: derived.zh, example: config.example(derived.pt) });
+          if (words.length >= neededDecks * 10) break;
+        }
+        if (words.length >= neededDecks * 10) break;
+      }
+    }
+
     for (let index = 0; index < neededDecks; index += 1) {
+      const topicNames = supplementalTopicNames[level];
       decks.push({
         level,
-        topicZh: `${level} 三个月补充词库 ${index + 1}`,
-        topicPt: `${level} vocabulário expandido ${index + 1}`,
+        topicZh: `${topicNames.zh[index % topicNames.zh.length]} ${index + 1}`,
+        topicPt: `${topicNames.pt[index % topicNames.pt.length]} ${index + 1}`,
         words: words.slice(index * 10, index * 10 + 10),
       });
     }
@@ -15141,7 +15359,34 @@ function buildSupplementalVocabularyDecks(baseDecks: VocabularyDeck[]) {
 
 const supplementalVocabularyDecks = buildSupplementalVocabularyDecks(baseVocabularyDecks);
 
-export const vocabularyDecks: VocabularyDeck[] = (['A1','A2','B1','B2','C1','C2'] as CEFRLevel[]).flatMap(level => [
-  ...supplementalVocabularyDecks.filter(deck => deck.level === level),
-  ...baseVocabularyDecks.filter(deck => deck.level === level),
-]);
+function buildDailyVocabularyDecks() {
+  const decks: VocabularyDeck[] = [];
+
+  for (const level of ['A1','A2','B1','B2','C1','C2'] as CEFRLevel[]) {
+    const targetDeckCount = level === 'A1' ? A1_TARGET_DAILY_DECKS : TARGET_DAILY_DECKS_PER_LEVEL;
+    const topicNames = supplementalTopicNames[level];
+    const seen = new Set<string>();
+    const words = [...baseVocabularyDecks, ...supplementalVocabularyDecks]
+      .filter(deck => deck.level === level)
+      .flatMap(deck => deck.words)
+      .filter(word => {
+        const key = word.pt.toLocaleLowerCase('pt-BR');
+        if (!isSingleWordTerm(word.pt) || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+    for (let index = 0; index < targetDeckCount; index += 1) {
+      decks.push({
+        level,
+        topicZh: `${topicNames.zh[index % topicNames.zh.length]} ${index + 1}`,
+        topicPt: `${topicNames.pt[index % topicNames.pt.length]} ${index + 1}`,
+        words: words.slice(index * 10, index * 10 + 10),
+      });
+    }
+  }
+
+  return decks;
+}
+
+export const vocabularyDecks: VocabularyDeck[] = buildDailyVocabularyDecks();

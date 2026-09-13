@@ -321,6 +321,167 @@ const cefrExplanations: Record<CEFRLevel, {
   },
 };
 
+type CefrExerciseSet = (typeof cefrExercises)[CEFRLevel];
+
+type SkillTopic = {
+  zh: string;
+  pt: string;
+  place: string;
+  action: string;
+  result: string;
+  contrast: string;
+  wrong: [string, string];
+};
+
+const skillTopics: Record<CEFRLevel, SkillTopic[]> = {
+  A1: [
+    { zh: '咖啡馆', pt: 'cafeteria', place: 'na cafeteria', action: 'pedir um café', result: 'pagar com cartão', contrast: 'o chá acabou', wrong: ['no banco', 'na farmácia'] },
+    { zh: '市场', pt: 'mercado', place: 'no mercado', action: 'comprar frutas', result: 'voltar para casa', contrast: 'a loja fecha cedo', wrong: ['na escola', 'no hotel'] },
+    { zh: '酒店', pt: 'hotel', place: 'no hotel', action: 'pedir a chave', result: 'subir para o quarto', contrast: 'a mala ficou na recepção', wrong: ['no cinema', 'na praia'] },
+    { zh: '车站', pt: 'estação', place: 'na estação', action: 'comprar um bilhete', result: 'pegar o metrô', contrast: 'o ônibus está cheio', wrong: ['no restaurante', 'na biblioteca'] },
+    { zh: '药店', pt: 'farmácia', place: 'na farmácia', action: 'comprar remédio', result: 'descansar em casa', contrast: 'a consulta é amanhã', wrong: ['na praça', 'na loja'] },
+    { zh: '课堂', pt: 'aula', place: 'na aula', action: 'fazer uma pergunta', result: 'anotar a resposta', contrast: 'o livro ficou em casa', wrong: ['no aeroporto', 'no banco'] },
+  ],
+  A2: [
+    { zh: '预约改期', pt: 'consulta', place: 'na clínica', action: 'remarcar a consulta', result: 'confirmar o novo horário', contrast: 'o médico atrasou', wrong: ['cancelar a viagem', 'trocar a passagem'] },
+    { zh: '公寓看房', pt: 'apartamento', place: 'no bairro novo', action: 'visitar o apartamento', result: 'comparar o aluguel', contrast: 'a cozinha é pequena', wrong: ['comprar remédio', 'pedir sobremesa'] },
+    { zh: '网购退换', pt: 'devolução', place: 'na loja online', action: 'pedir uma troca', result: 'receber outro produto', contrast: 'o tamanho ficou grande', wrong: ['marcar consulta', 'pegar ônibus'] },
+    { zh: '周末计划', pt: 'passeio', place: 'no parque', action: 'combinar um passeio', result: 'encontrar os amigos', contrast: 'vai chover à tarde', wrong: ['assinar contrato', 'fazer exame'] },
+    { zh: '工作安排', pt: 'reunião', place: 'no escritório', action: 'adiar a reunião', result: 'enviar uma mensagem', contrast: 'o cliente mudou o horário', wrong: ['reservar hotel', 'comprar frutas'] },
+    { zh: '旅行准备', pt: 'viagem', place: 'no aeroporto', action: 'despachar a mala', result: 'procurar o portão', contrast: 'o voo mudou de terminal', wrong: ['pagar aluguel', 'lavar roupa'] },
+  ],
+  B1: [
+    { zh: '远程学习', pt: 'estudo online', place: 'em casa', action: 'organizar a rotina', result: 'aprender com mais constância', contrast: 'as distrações atrapalham', wrong: ['mudar de cidade', 'cancelar o curso'] },
+    { zh: '团队项目', pt: 'projeto', place: 'na empresa', action: 'dividir as tarefas', result: 'cumprir o prazo', contrast: 'faltavam informações claras', wrong: ['trocar o apartamento', 'pedir comida'] },
+    { zh: '旅行问题', pt: 'viagem', place: 'na estação', action: 'procurar ajuda', result: 'resolver o atraso', contrast: 'o último trem saiu cedo', wrong: ['comprar um presente', 'fazer uma reunião'] },
+    { zh: '职业选择', pt: 'carreira', place: 'no trabalho', action: 'pedir orientação', result: 'definir uma meta', contrast: 'havia muitas opções', wrong: ['trocar dinheiro', 'alugar um quarto'] },
+    { zh: '社区活动', pt: 'comunidade', place: 'no bairro', action: 'organizar um evento', result: 'aproximar os vizinhos', contrast: 'pouca gente confirmou presença', wrong: ['perder a mala', 'pedir café'] },
+    { zh: '健康习惯', pt: 'hábitos', place: 'na rotina diária', action: 'praticar caminhada', result: 'ter mais energia', contrast: 'no começo foi difícil', wrong: ['assinar um contrato', 'comprar ingresso'] },
+  ],
+  B2: [
+    { zh: '城市出行', pt: 'mobilidade urbana', place: 'nas grandes cidades', action: 'ampliar ciclovias', result: 'reduzir trajetos de carro', contrast: 'a infraestrutura ainda é desigual', wrong: ['aumentar cardápios', 'trocar uniformes'] },
+    { zh: '数字隐私', pt: 'privacidade digital', place: 'nas plataformas', action: 'limitar a coleta de dados', result: 'aumentar a confiança', contrast: 'a personalização pode diminuir', wrong: ['fechar escolas', 'proibir bicicletas'] },
+    { zh: '远程办公', pt: 'trabalho remoto', place: 'nas equipes', action: 'adotar modelo híbrido', result: 'preservar flexibilidade', contrast: 'a comunicação informal enfraquece', wrong: ['baixar salários', 'evitar tecnologia'] },
+    { zh: '循环经济', pt: 'economia circular', place: 'na indústria', action: 'reaproveitar materiais', result: 'reduzir desperdício', contrast: 'a logística exige investimento', wrong: ['aumentar filas', 'cancelar contratos'] },
+    { zh: '教育包容', pt: 'educação inclusiva', place: 'nas escolas', action: 'adaptar materiais', result: 'ampliar participação', contrast: 'a formação docente é insuficiente', wrong: ['fechar bibliotecas', 'cortar transporte'] },
+    { zh: '危机管理', pt: 'gestão de crise', place: 'nas organizações', action: 'definir protocolos', result: 'responder com rapidez', contrast: 'decisões apressadas geram ruído', wrong: ['decorar vitrines', 'mudar receitas'] },
+  ],
+  C1: [
+    { zh: '公共话语', pt: 'discurso público', place: 'no debate social', action: 'explicitar pressupostos', result: 'qualificar a discussão', contrast: 'a polarização simplifica nuances', wrong: ['aumentar horários', 'trocar móveis'] },
+    { zh: '学术写作', pt: 'produção acadêmica', place: 'na universidade', action: 'delimitar o recorte', result: 'fortalecer a argumentação', contrast: 'conceitos vagos reduzem rigor', wrong: ['comprar passagens', 'marcar consultas'] },
+    { zh: '文化记忆', pt: 'memória coletiva', place: 'nos museus', action: 'contextualizar narrativas', result: 'ampliar interpretações', contrast: 'certas vozes continuam ausentes', wrong: ['cancelar reuniões', 'comparar preços'] },
+    { zh: '职业伦理', pt: 'ética profissional', place: 'nas instituições', action: 'revisar critérios', result: 'evitar arbitrariedades', contrast: 'as regras nem sempre cobrem casos novos', wrong: ['pintar paredes', 'trocar senhas'] },
+    { zh: '能源转型', pt: 'transição energética', place: 'nas políticas públicas', action: 'articular incentivos', result: 'reduzir dependências', contrast: 'custos iniciais geram resistência', wrong: ['abrir restaurantes', 'vender roupas'] },
+    { zh: '数字公民', pt: 'cidadania digital', place: 'nas redes', action: 'desenvolver letramento crítico', result: 'avaliar fontes', contrast: 'a velocidade favorece reações automáticas', wrong: ['fechar parques', 'imprimir mapas'] },
+  ],
+  C2: [
+    { zh: '阐释争议', pt: 'disputa hermenêutica', place: 'na análise textual', action: 'examinar camadas de sentido', result: 'evitar reducionismos', contrast: 'toda leitura pressupõe critérios', wrong: ['reservar hotéis', 'corrigir horários'] },
+    { zh: '算法治理', pt: 'governança algorítmica', place: 'nas infraestruturas digitais', action: 'problematizar a opacidade', result: 'redistribuir responsabilidade', contrast: 'a eficiência pode ocultar assimetrias', wrong: ['preparar sobremesas', 'vender ingressos'] },
+    { zh: '主体性生产', pt: 'produção de subjetividade', place: 'nas práticas culturais', action: 'mapear mediações', result: 'compreender formas de agência', contrast: 'a autonomia nunca é absoluta', wrong: ['organizar malas', 'limpar quartos'] },
+    { zh: '批判实在论', pt: 'realismo crítico', place: 'na teoria social', action: 'distinguir níveis de análise', result: 'relacionar estrutura e experiência', contrast: 'a evidência empírica não fala sozinha', wrong: ['trocar cartões', 'abrir janelas'] },
+    { zh: '政治想象', pt: 'imaginação política', place: 'no pensamento contemporâneo', action: 'reformular horizontes possíveis', result: 'questionar consensos', contrast: 'utopia e viabilidade entram em tensão', wrong: ['pedir café', 'comparar tamanhos'] },
+    { zh: '符号化', pt: 'semiotização', place: 'na comunicação social', action: 'analisar signos', result: 'perceber disputas de sentido', contrast: 'a forma condiciona a recepção', wrong: ['pagar contas', 'comprar remédios'] },
+  ],
+};
+
+const skillFocuses = [
+  { zh: '原因', pt: 'causa', phrase: 'porque precisava resolver isso antes do almoço' },
+  { zh: '结果', pt: 'resultado', phrase: 'e por isso mudou o plano inicial' },
+  { zh: '困难', pt: 'dificuldade', phrase: 'apesar de uma dificuldade inesperada' },
+  { zh: '建议', pt: 'sugestão', phrase: 'com a sugestão de continuar no dia seguinte' },
+  { zh: '比较', pt: 'comparação', phrase: 'em comparação com a opção anterior' },
+  { zh: '优先事项', pt: 'prioridade', phrase: 'pois isso era a prioridade do momento' },
+  { zh: '风险', pt: 'risco', phrase: 'embora houvesse um risco claro' },
+  { zh: '变化', pt: 'mudança', phrase: 'depois de uma mudança de última hora' },
+  { zh: '理由', pt: 'motivo', phrase: 'por um motivo simples e prático' },
+  { zh: '后续行动', pt: 'próximo passo', phrase: 'antes de decidir o próximo passo' },
+  { zh: '限制', pt: 'limitação', phrase: 'sem ignorar uma limitação importante' },
+  { zh: '好处', pt: 'benefício', phrase: 'porque o benefício parecia maior' },
+  { zh: '反面影响', pt: 'efeito negativo', phrase: 'mas o efeito negativo também apareceu' },
+  { zh: '时间安排', pt: 'horário', phrase: 'dentro do horário combinado' },
+  { zh: '个人选择', pt: 'escolha pessoal', phrase: 'como uma escolha pessoal bem pensada' },
+  { zh: '共同决定', pt: 'decisão conjunta', phrase: 'após uma decisão tomada em conjunto' },
+  { zh: '信息不足', pt: 'falta de informação', phrase: 'porque faltavam informações confiáveis' },
+  { zh: '解决办法', pt: 'solução', phrase: 'até encontrar uma solução simples' },
+  { zh: '观点', pt: 'opinião', phrase: 'segundo a opinião apresentada' },
+  { zh: '例外情况', pt: 'exceção', phrase: 'salvo em casos muito específicos' },
+];
+
+function rotatedOptions(options: string[], correctIndex: number) {
+  const shift = correctIndex % options.length;
+  const rotated = [...options.slice(shift), ...options.slice(0, shift)];
+  return { options: rotated, answer: rotated.indexOf(options[0]) };
+}
+
+function getDailyCefrExercise(level: CEFRLevel, dayIndex: number): CefrExerciseSet {
+  const base = cefrExercises[level];
+  const topic = skillTopics[level][dayIndex % skillTopics[level].length];
+  const focus = skillFocuses[Math.floor(dayIndex / skillTopics[level].length) % skillFocuses.length];
+  const listeningOptions = rotatedOptions([topic.pt, topic.wrong[0], topic.wrong[1]], dayIndex);
+  const readingOptions = rotatedOptions([focus.pt, topic.wrong[1], topic.wrong[0]], dayIndex + 1);
+  const levelIntro: Record<CEFRLevel, string> = {
+    A1: `Hoje, ${topic.place}, vou ${topic.action}. Depois vou ${topic.result}.`,
+    A2: `Ontem, ${topic.place}, precisei ${topic.action} ${focus.phrase}. No fim, consegui ${topic.result}.`,
+    B1: `Quando surgiu a situação sobre ${topic.pt}, tentei ${topic.action} ${focus.phrase}. A principal dificuldade foi que ${topic.contrast}, mas consegui ${topic.result}.`,
+    B2: `Ao discutir ${topic.pt}, o grupo propôs ${topic.action} ${focus.phrase}. A medida poderia ${topic.result}; no entanto, ${topic.contrast}.`,
+    C1: `No contexto de ${topic.pt}, convém ${topic.action} ${focus.phrase}. Tal movimento tende a ${topic.result}, embora ${topic.contrast}.`,
+    C2: `A reflexão sobre ${topic.pt} exige ${topic.action} ${focus.phrase}; desse modo, torna-se possível ${topic.result}, sem apagar que ${topic.contrast}.`,
+  };
+  const readingText: Record<CEFRLevel, string> = {
+    A1: `${topic.pt.toUpperCase()}: hoje ${topic.action}. Atenção: ${topic.contrast}.`,
+    A2: `Mensagem: vou ${topic.action} ${focus.phrase}. Se tudo der certo, posso ${topic.result}.`,
+    B1: `A experiência com ${topic.pt} mostrou que ${topic.action} ajuda quando há organização. Mesmo assim, ${topic.contrast}, então o resultado depende de continuidade.`,
+    B2: `A proposta ligada a ${topic.pt} promete ${topic.result}. Contudo, sua eficácia depende de planejamento, pois ${topic.contrast}.`,
+    C1: `A análise de ${topic.pt} ganha consistência quando procura ${topic.action}. O ganho interpretativo é claro, mas ${topic.contrast}.`,
+    C2: `Em ${topic.pt}, ${topic.action} não é apenas procedimento técnico: é uma forma de reconfigurar o objeto. Ainda assim, ${topic.contrast}.`,
+  };
+
+  return {
+    listening: {
+      text: levelIntro[level],
+      questionZh: `这段内容主要说的是哪个主题？`,
+      questionPt: 'Qual é o tema principal?',
+      options: listeningOptions.options,
+      answer: listeningOptions.answer,
+    },
+    speaking: {
+      promptZh: `围绕“${topic.zh}”做一段 ${level} 口语表达。`,
+      promptPt: `Fale sobre ${topic.pt} no nível ${level}.`,
+      cues: [topic.action, focus.pt, topic.result],
+      model: `${levelIntro[level]} Na minha opinião, isso ajuda a praticar vocabulário e organizar melhor as ideias.`,
+    },
+    reading: {
+      text: readingText[level],
+      questionZh: `材料重点训练哪类理解？`,
+      questionPt: 'Que tipo de compreensão este texto pratica?',
+      options: readingOptions.options,
+      answer: readingOptions.answer,
+    },
+    writing: base.writing,
+  };
+}
+
+function getDailyCefrExplanations(level: CEFRLevel, exercise: CefrExerciseSet) {
+  return {
+    listening: {
+      key: exercise.listening.options[exercise.listening.answer],
+      zh: `${level} 听力今天轮换到新的主题。答案可以从原文中的主题词和后续动作判断出来。`,
+      pt: `A escuta de hoje gira para um novo tema de ${level}; a resposta vem do tema e das ações mencionadas.`,
+    },
+    reading: {
+      key: exercise.reading.options[exercise.reading.answer],
+      zh: `阅读材料今天更换了情境。根据文本里的转折、原因或结果，可以判断训练重点。`,
+      pt: 'O texto de hoje usa outro contexto; a resposta aparece na relação entre causa, contraste ou resultado.',
+    },
+    speaking: {
+      zh: `口语任务今天围绕同一主题展开，重点是用提示词组织一段完整表达。`,
+      pt: 'A tarefa oral usa o tema do dia; organize uma fala completa com as pistas.',
+    },
+    writingZh: cefrExplanations[level].writingZh,
+    writingPt: cefrExplanations[level].writingPt,
+  };
+}
+
 const verbQuestions = [
   { tenseZh: '规则动词 · 现在时', tensePt: 'Regular · presente', infinitive: 'falar', subject: 'eu', sentence: 'Eu ___ português todos os dias.', accepted: [{ form: 'falo', zh: '-ar 动词现在时 eu 形式通常去掉 -ar，加 -o：falar → falo。', pt: 'No presente, verbos em -ar tomam -o com eu: falar → falo.' }] },
   { tenseZh: '规则动词 · 现在时', tensePt: 'Regular · presente', infinitive: 'comer', subject: 'nós', sentence: 'Nós ___ em casa durante a semana.', accepted: [{ form: 'comemos', zh: '-er 动词现在时 nós 形式保留词干，加 -emos：comer → comemos。', pt: 'No presente, verbos em -er usam -emos com nós: comer → comemos.' }] },
@@ -513,7 +674,7 @@ const genderQuestions: Array<{ word: string; gender: GenderValue; article: strin
 
 const GENDER_STAGE_SIZE = 10;
 const GENDER_STAGE_COUNT = genderQuestions.length / GENDER_STAGE_SIZE;
-const VOCAB_CONTENT_VERSION = 'oi-v7-expanded-first-20260913';
+const VOCAB_CONTENT_VERSION = 'oi-v8-single-word-skills-20260913';
 const PROFILE_CALENDAR_START = new Date(2026, 5, 1);
 const PROFILE_CALENDAR_MONTH_COUNT = 14;
 
@@ -598,15 +759,21 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     : 100;
   const verbStartIndex = Array.from(`${dayKey}-${selectedLevel}`).reduce((sum, character) => sum + character.charCodeAt(0), 0) % verbQuestions.length;
   const verb = verbQuestions[(verbStartIndex + verbRound * 5 + verbStep) % verbQuestions.length];
-  const gender = genderQuestions[genderStage * GENDER_STAGE_SIZE + genderStep];
-  const visibleGenderScore = genderScore + (genderChoice === gender.gender ? 1 : 0);
-  const levelExercise = cefrExercises[selectedLevel];
-  const listeningAudioKey = `listening-${selectedLevel}`;
-  const speakingModelAudioKey = `speaking-model-${selectedLevel}`;
-  const stopAudioLabel = language === 'zh' ? '停止' : 'Parar';
-  const writingWordCount = writingText.trim() ? writingText.trim().split(/\s+/).length : 0;
   const activeLearningProgress: LevelLearningProgress = learningProgress[selectedLevel] || { lesson: 0, stage: 0, startedOn: dayKey, history: {} };
   const todayLearningRecord = activeLearningProgress.history[dayKey];
+  const skillExerciseIndex = Math.max(
+    activeLearningProgress.lesson,
+    vocabLoopStats.sessions,
+    Object.values(activeLearningProgress.history).filter(record => record.studied || record.completed || record.completedStages > 0).length,
+  );
+  const gender = genderQuestions[genderStage * GENDER_STAGE_SIZE + genderStep];
+  const visibleGenderScore = genderScore + (genderChoice === gender.gender ? 1 : 0);
+  const levelExercise = getDailyCefrExercise(selectedLevel, skillExerciseIndex);
+  const levelExerciseExplanations = getDailyCefrExplanations(selectedLevel, levelExercise);
+  const listeningAudioKey = `listening-${selectedLevel}-${skillExerciseIndex}`;
+  const speakingModelAudioKey = `speaking-model-${selectedLevel}-${skillExerciseIndex}`;
+  const stopAudioLabel = language === 'zh' ? '停止' : 'Parar';
+  const writingWordCount = writingText.trim() ? writingText.trim().split(/\s+/).length : 0;
   const levelLibraryNote = language === 'zh'
     ? `${selectedLevel}：${levelDeckIndices.length} 节日课 · ${totalVocabularyWords} 个词 · 完整词库共 ${vocabularyDecks.reduce((sum, deck) => sum + deck.words.length, 0)} 词`
     : `${selectedLevel}: ${levelDeckIndices.length} lições · ${totalVocabularyWords} palavras · ${vocabularyDecks.reduce((sum, deck) => sum + deck.words.length, 0)} no total`;
@@ -1725,9 +1892,9 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         </div>}
       </section>
     )}
-    {mode === 'listening' && <section className="study-panel skill-exercise mt-8 rounded-[28px] p-6"><div className="skill-level-row"><span>{selectedLevel}</span><small>{language==='zh'?cefrInfo[selectedLevel].zh:cefrInfo[selectedLevel].pt}</small></div><div className="audio-stage mt-6"><span>◖)))</span><p>{language==='zh'?'先听，不看文本':'Ouça antes de ler'}</p><button onClick={()=>playPortuguese(levelExercise.listening.text, listeningAudioKey)}>{playingAudioKey === listeningAudioKey ? `■ ${stopAudioLabel}` : comprehensionAnswer===null?skillUi.play:skillUi.replay}</button></div><p className="mt-6 text-xs font-black text-[#18352f]/55">{skillUi.question}</p><h2 className="mt-2 text-lg font-black">{language==='zh'?levelExercise.listening.questionZh:levelExercise.listening.questionPt}</h2><div className="exercise-options mt-4">{levelExercise.listening.options.map((option,index)=><button key={option} onClick={()=>{setComprehensionAnswer(index);if(index===levelExercise.listening.answer)completeJourneyStage(1)}} className={comprehensionAnswer===index?(index===levelExercise.listening.answer?'correct':'wrong'):''}>{option}</button>)}</div>{comprehensionAnswer!==null&&<div className={`answer-feedback detailed mt-5 ${comprehensionAnswer===levelExercise.listening.answer?'correct':'wrong'}`}><strong>{comprehensionAnswer===levelExercise.listening.answer?skillUi.correct:skillUi.wrong}</strong><dl><div><dt>{skillUi.correctAnswer}</dt><dd>{levelExercise.listening.options[levelExercise.listening.answer]}</dd></div><div><dt>{skillUi.evidence}</dt><dd>“{cefrExplanations[selectedLevel].listening.key}”</dd></div><div><dt>{skillUi.analysis}</dt><dd>{language==='zh'?cefrExplanations[selectedLevel].listening.zh:cefrExplanations[selectedLevel].listening.pt}</dd></div><div><dt>{skillUi.transcript}</dt><dd>{levelExercise.listening.text}</dd></div></dl></div>}</section>}
-    {mode === 'speaking' && <section className="study-panel skill-exercise mt-8 rounded-[28px] p-6"><div className="skill-level-row"><span>{selectedLevel}</span><small>{skillUi.speakingTask}</small></div><h1 className="mt-5 text-xl font-black leading-relaxed">{language==='zh'?levelExercise.speaking.promptZh:levelExercise.speaking.promptPt}</h1><p className="mt-6 text-xs font-black text-[#18352f]/55">{skillUi.goals}</p><div className="speaking-cues mt-3">{levelExercise.speaking.cues.map(cue=><span key={cue}>{cue}</span>)}</div><button onClick={()=>{playPortuguese(levelExercise.speaking.model, speakingModelAudioKey);setShowSpeakingModel(true)}} className="model-button mt-6">{playingAudioKey === speakingModelAudioKey ? `■ ${stopAudioLabel}` : `▶ ${skillUi.model}`}</button>{showSpeakingModel&&<div className="model-analysis mt-4"><strong>{skillUi.modelAnswer}</strong><p>{levelExercise.speaking.model}</p><small>{language==='zh'?cefrExplanations[selectedLevel].speaking.zh:cefrExplanations[selectedLevel].speaking.pt}</small></div>}<div className={`speaking-timer mt-6 ${speakingActive?'active':''}`}><span>{speakingActive?'●':'○'}</span><p>{speakingActive?(language==='zh'?'正在录音，请连续表达，尽量覆盖三个目标':'Gravando. Fale continuamente e use os três objetivos'):(language==='zh'?'准备好后开始录音，结束后可以回听自己的声音':'Comece a gravar quando estiver pronto; depois ouça sua voz')}</p></div><button onClick={()=>void toggleSpeakingRecording()} className="primary-wide mt-5"><span>{speakingActive?'■':'◉'}</span>{speakingActive?skillUi.finishSpeaking:skillUi.startSpeaking}</button>{speakingRecordingError&&<p className="speaking-error mt-4">{speakingRecordingError}</p>}{speakingRecordingUrl&&<div className="speaking-playback mt-4"><strong>{language==='zh'?'我的录音':'Minha gravação'}</strong><audio controls src={speakingRecordingUrl}/></div>}</section>}
-    {mode === 'reading' && <section className="study-panel skill-exercise mt-8 rounded-[28px] p-6"><div className="skill-level-row"><span>{selectedLevel}</span><small>{skillUi.readingTask}</small></div><article className="reading-passage mt-5">{levelExercise.reading.text}</article><p className="mt-6 text-xs font-black text-[#18352f]/55">{skillUi.question}</p><h2 className="mt-2 text-lg font-black">{language==='zh'?levelExercise.reading.questionZh:levelExercise.reading.questionPt}</h2><div className="exercise-options mt-4">{levelExercise.reading.options.map((option,index)=><button key={option} onClick={()=>{setComprehensionAnswer(index);if(index===levelExercise.reading.answer)completeJourneyStage(2)}} className={comprehensionAnswer===index?(index===levelExercise.reading.answer?'correct':'wrong'):''}>{option}</button>)}</div>{comprehensionAnswer!==null&&<div className={`answer-feedback detailed mt-5 ${comprehensionAnswer===levelExercise.reading.answer?'correct':'wrong'}`}><strong>{comprehensionAnswer===levelExercise.reading.answer?skillUi.correct:skillUi.wrong}</strong><dl><div><dt>{skillUi.correctAnswer}</dt><dd>{levelExercise.reading.options[levelExercise.reading.answer]}</dd></div><div><dt>{skillUi.evidence}</dt><dd>“{cefrExplanations[selectedLevel].reading.key}”</dd></div><div><dt>{skillUi.analysis}</dt><dd>{language==='zh'?cefrExplanations[selectedLevel].reading.zh:cefrExplanations[selectedLevel].reading.pt}</dd></div></dl></div>}</section>}
+    {mode === 'listening' && <section className="study-panel skill-exercise mt-8 rounded-[28px] p-6"><div className="skill-level-row"><span>{selectedLevel}</span><small>{language==='zh'?cefrInfo[selectedLevel].zh:cefrInfo[selectedLevel].pt}</small></div><div className="audio-stage mt-6"><span>◖)))</span><p>{language==='zh'?'先听，不看文本':'Ouça antes de ler'}</p><button onClick={()=>playPortuguese(levelExercise.listening.text, listeningAudioKey)}>{playingAudioKey === listeningAudioKey ? `■ ${stopAudioLabel}` : comprehensionAnswer===null?skillUi.play:skillUi.replay}</button></div><p className="mt-6 text-xs font-black text-[#18352f]/55">{skillUi.question}</p><h2 className="mt-2 text-lg font-black">{language==='zh'?levelExercise.listening.questionZh:levelExercise.listening.questionPt}</h2><div className="exercise-options mt-4">{levelExercise.listening.options.map((option,index)=><button key={option} onClick={()=>{setComprehensionAnswer(index);if(index===levelExercise.listening.answer)completeJourneyStage(1)}} className={comprehensionAnswer===index?(index===levelExercise.listening.answer?'correct':'wrong'):''}>{option}</button>)}</div>{comprehensionAnswer!==null&&<div className={`answer-feedback detailed mt-5 ${comprehensionAnswer===levelExercise.listening.answer?'correct':'wrong'}`}><strong>{comprehensionAnswer===levelExercise.listening.answer?skillUi.correct:skillUi.wrong}</strong><dl><div><dt>{skillUi.correctAnswer}</dt><dd>{levelExercise.listening.options[levelExercise.listening.answer]}</dd></div><div><dt>{skillUi.evidence}</dt><dd>“{levelExerciseExplanations.listening.key}”</dd></div><div><dt>{skillUi.analysis}</dt><dd>{language==='zh'?levelExerciseExplanations.listening.zh:levelExerciseExplanations.listening.pt}</dd></div><div><dt>{skillUi.transcript}</dt><dd>{levelExercise.listening.text}</dd></div></dl></div>}</section>}
+    {mode === 'speaking' && <section className="study-panel skill-exercise mt-8 rounded-[28px] p-6"><div className="skill-level-row"><span>{selectedLevel}</span><small>{skillUi.speakingTask}</small></div><h1 className="mt-5 text-xl font-black leading-relaxed">{language==='zh'?levelExercise.speaking.promptZh:levelExercise.speaking.promptPt}</h1><p className="mt-6 text-xs font-black text-[#18352f]/55">{skillUi.goals}</p><div className="speaking-cues mt-3">{levelExercise.speaking.cues.map(cue=><span key={cue}>{cue}</span>)}</div><button onClick={()=>{playPortuguese(levelExercise.speaking.model, speakingModelAudioKey);setShowSpeakingModel(true)}} className="model-button mt-6">{playingAudioKey === speakingModelAudioKey ? `■ ${stopAudioLabel}` : `▶ ${skillUi.model}`}</button>{showSpeakingModel&&<div className="model-analysis mt-4"><strong>{skillUi.modelAnswer}</strong><p>{levelExercise.speaking.model}</p><small>{language==='zh'?levelExerciseExplanations.speaking.zh:levelExerciseExplanations.speaking.pt}</small></div>}<div className={`speaking-timer mt-6 ${speakingActive?'active':''}`}><span>{speakingActive?'●':'○'}</span><p>{speakingActive?(language==='zh'?'正在录音，请连续表达，尽量覆盖三个目标':'Gravando. Fale continuamente e use os três objetivos'):(language==='zh'?'准备好后开始录音，结束后可以回听自己的声音':'Comece a gravar quando estiver pronto; depois ouça sua voz')}</p></div><button onClick={()=>void toggleSpeakingRecording()} className="primary-wide mt-5"><span>{speakingActive?'■':'◉'}</span>{speakingActive?skillUi.finishSpeaking:skillUi.startSpeaking}</button>{speakingRecordingError&&<p className="speaking-error mt-4">{speakingRecordingError}</p>}{speakingRecordingUrl&&<div className="speaking-playback mt-4"><strong>{language==='zh'?'我的录音':'Minha gravação'}</strong><audio controls src={speakingRecordingUrl}/></div>}</section>}
+    {mode === 'reading' && <section className="study-panel skill-exercise mt-8 rounded-[28px] p-6"><div className="skill-level-row"><span>{selectedLevel}</span><small>{skillUi.readingTask}</small></div><article className="reading-passage mt-5">{levelExercise.reading.text}</article><p className="mt-6 text-xs font-black text-[#18352f]/55">{skillUi.question}</p><h2 className="mt-2 text-lg font-black">{language==='zh'?levelExercise.reading.questionZh:levelExercise.reading.questionPt}</h2><div className="exercise-options mt-4">{levelExercise.reading.options.map((option,index)=><button key={option} onClick={()=>{setComprehensionAnswer(index);if(index===levelExercise.reading.answer)completeJourneyStage(2)}} className={comprehensionAnswer===index?(index===levelExercise.reading.answer?'correct':'wrong'):''}>{option}</button>)}</div>{comprehensionAnswer!==null&&<div className={`answer-feedback detailed mt-5 ${comprehensionAnswer===levelExercise.reading.answer?'correct':'wrong'}`}><strong>{comprehensionAnswer===levelExercise.reading.answer?skillUi.correct:skillUi.wrong}</strong><dl><div><dt>{skillUi.correctAnswer}</dt><dd>{levelExercise.reading.options[levelExercise.reading.answer]}</dd></div><div><dt>{skillUi.evidence}</dt><dd>“{levelExerciseExplanations.reading.key}”</dd></div><div><dt>{skillUi.analysis}</dt><dd>{language==='zh'?levelExerciseExplanations.reading.zh:levelExerciseExplanations.reading.pt}</dd></div></dl></div>}</section>}
     <button onClick={returnToJourney} className="mt-6 w-full text-sm font-bold text-[#18352f]/55">← {reviewingStage!==null?(language==='zh'?'返回学习地图':'Voltar ao mapa'):ui.back}</button>
   </div>;
 }
