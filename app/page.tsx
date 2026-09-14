@@ -754,16 +754,6 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const loopFocusIndex = (vocabLoopStats.cycle - 1) % 4;
   const activeLearningProgress: LevelLearningProgress = learningProgress[selectedLevel] || { lesson: 0, stage: 0, startedOn: dayKey, history: {} };
   const totalVocabularyWords = levelDeckIndices.reduce((sum, index) => sum + vocabularyDecks[index].words.length, 0);
-  const completedVocabularyDays = Object.values(activeLearningProgress.history).filter(record => record.completed || (record.completedStages || 0) > 0).length;
-  const learnedWordEstimate = Math.min(
-    totalVocabularyWords,
-    Math.max(
-      vocabLoopStats.completedWordTotal,
-      vocabLoopStats.completedTopics.filter(index=>levelDeckIndices.includes(index)).length * 10,
-      completedVocabularyDays * 10,
-      activeLearningProgress.lesson * 10,
-    ),
-  );
   const weeklySessions = vocabLoopStats.sessions % 7;
   const activeMistakeWords = vocabLoopStats.mistakeWords.slice(0, 5);
   const allVocabularyItems = vocabularyDecks.flatMap((deck, deckIndex) => deck.words.map((word, wordIndex) => ({ word, id: deckIndex * 100 + wordIndex })));
@@ -867,7 +857,39 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       streakDate.setDate(streakDate.getDate() - 1);
     }
   }
-  const currentLevelProgress = levelDeckIndices.length ? Math.min(100, Math.round((activeLearningProgress.lesson / levelDeckIndices.length) * 100)) : 0;
+  const journeyStageCount = JOURNEY_STAGE_COUNT;
+  const levelCompletedStageUnits = Object.values(activeLearningProgress.history).reduce((sum, record) => {
+    if (record.completed) return sum + journeyStageCount;
+    return sum + Math.min(journeyStageCount, record.completedStages || 0);
+  }, 0);
+  const vocabCompletedTopicCount = vocabLoopStats.completedTopics.filter(index => levelDeckIndices.includes(index)).length;
+  const levelProgressUnits = Math.max(
+    activeLearningProgress.lesson * journeyStageCount,
+    vocabCompletedTopicCount * journeyStageCount,
+    levelCompletedStageUnits,
+  );
+  const currentLevelProgress = levelDeckIndices.length
+    ? Math.min(100, levelProgressUnits > 0 ? Math.max(1, Math.ceil((levelProgressUnits / (levelDeckIndices.length * journeyStageCount)) * 100)) : 0)
+    : 0;
+  const allTimeCompletedWordEstimate = Math.min(
+    vocabularyDecks.reduce((sum, deck) => sum + deck.words.length, 0),
+    cefrLevels.reduce((sum, level) => {
+      const indices = vocabularyDecks.map((deck,index)=>deck.level===level?index:-1).filter(index=>index>=0);
+      const progress = learningProgress[level] || { lesson: 0, stage: 0, startedOn: dayKey, history: {} };
+      const loop = vocabLoopByLevel[level] || defaultVocabLoopStats;
+      const wordsInLevel = indices.reduce((levelSum, index) => levelSum + vocabularyDecks[index].words.length, 0);
+      const completedDays = Object.values(progress.history).filter(record => record.completed || (record.completedStages || 0) > 0).length;
+      return sum + Math.min(
+        wordsInLevel,
+        Math.max(
+          loop.completedWordTotal,
+          loop.completedTopics.filter(index=>indices.includes(index)).length * 10,
+          completedDays * 10,
+          progress.lesson * 10,
+        ),
+      );
+    }, 0),
+  );
   const currentMonthPrefix = dayKey.slice(0, 7);
   const daysElapsedThisMonth = new Date().getDate();
   const studiedThisMonth = Array.from(studiedDayKeys).filter(key => key.startsWith(currentMonthPrefix)).length;
@@ -928,7 +950,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const accountSyncUi = language === 'zh'
     ? {
       checking: ['账号同步', '正在检查登录状态…'],
-      guest: ['本地试用中', '登录后可把学习记录保存到你的账号，换设备也能继续。'],
+      guest: ['本地试用中', ''],
       ready: ['已同步到账号', remoteUser?.email || '当前登录用户'],
       saving: ['正在保存', '你的学习进度正在同步到云端。'],
       error: ['同步暂不可用', '当前会继续保存在本机，稍后会再尝试同步。'],
@@ -937,7 +959,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     }
     : {
       checking: ['Sincronização', 'Verificando login…'],
-      guest: ['Modo local', 'Entre para salvar seu progresso na conta.'],
+      guest: ['Modo local', ''],
       ready: ['Sincronizado', remoteUser?.email || 'Usuário atual'],
       saving: ['Salvando', 'Seu progresso está sendo sincronizado.'],
       error: ['Sincronização indisponível', 'O progresso continua salvo neste dispositivo.'],
@@ -1718,7 +1740,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   if (mode === 'profile') return <div className="screen-enter min-h-[790px] px-6 pb-28 pt-7">
     <header className="profile-header"><div><p className="eyebrow">{profileUi.title}</p><h1>{language==='zh'?'学习概览':'Resumo'}</h1><small>{profileUi.subtitle}</small></div><span>{selectedLevel}</span></header>
     <section className={`account-sync mt-4 ${cloudSyncStatus}`}>
-      <div><strong>{accountSyncMessage[0]}</strong><span>{accountSyncMessage[1]}</span></div>
+      <div><strong>{accountSyncMessage[0]}</strong>{accountSyncMessage[1] && <span>{accountSyncMessage[1]}</span>}</div>
       {cloudSyncStatus === 'guest' && <a href="/signin-with-chatgpt?return_to=/" target="_top">{accountSyncUi.action}</a>}
       {cloudSyncStatus === 'ready' && <a href="/signout-with-chatgpt?return_to=/" target="_top">{accountSyncUi.signOut}</a>}
     </section>
@@ -1732,7 +1754,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       <div className="profile-progress"><span style={{width:`${Math.max(6,currentLevelProgress)}%`}}/></div>
       <div className="profile-metrics">
         <span><b>{selectedLevel} · {activeLearningProgress.lesson + 1}/{levelDeckIndices.length}</b><small>{profileUi.currentLesson}</small></span>
-        <span><b>{learnedWordEstimate}</b><small>{profileUi.learnedWords}</small></span>
+        <span><b>{allTimeCompletedWordEstimate}</b><small>{profileUi.learnedWords}</small></span>
         <span><b>{monthlyCompletionRate}%</b><small>{profileUi.monthRate}</small></span>
       </div>
     </section>
