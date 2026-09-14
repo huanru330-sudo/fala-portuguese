@@ -10,7 +10,7 @@ type Language = 'zh' | 'pt';
 
 const text = {
   zh: {
-    streak: '连续练习', days: '🔥 4 天', goal: '本周目标', sessions: '3 / 5 次', today: '今日推荐', cafe: '咖啡馆点餐', level: 'A1 · 约 5 分钟', mission: '用葡语完成一杯咖啡的点单', missionMeta: '5 个小任务 · AI 店员', start: '开始练习 →', more: '更多场景', all: '查看全部', airport: '机场问路', shopping: '商店购物', min6: 'A1 · 6分钟', min7: 'A2 · 7分钟',
+    streak: '连续练习', days: '4 天', goal: '本周目标', sessions: '3 / 5 次', today: '今日推荐', cafe: '咖啡馆点餐', level: 'A1 · 约 5 分钟', mission: '用葡语完成一杯咖啡的点单', missionMeta: '5 个小任务 · AI 店员', start: '开始练习 →', more: '更多场景', all: '查看全部', airport: '机场问路', shopping: '商店购物', min6: 'A1 · 6分钟', min7: 'A2 · 7分钟',
     prep: '练习准备', yourMission: '你的任务', task: '向 AI 店员点一杯小杯拿铁，询问价格并使用银行卡付款。', stepsTitle: '完成这 5 步', steps: ['向店员打招呼', '说出想要的饮品', '选择杯型和牛奶', '询问价格', '选择付款方式'], phrases: '可以偷看的表达', enter: '进入咖啡馆', clerk: 'Marina · AI 店员', location: '巴西圣保罗 · 自然语速', again: '↻ 再听一次', said: '你刚才说', listening: '正在听你说葡语… 再按一次完成', speak: '按住你的节奏，自然说出来', finish: '完成对话，查看报告 →', hint: '需要提示',
     report: '练习报告', complete: '任务完成！', completeText: '你成功完成了咖啡点单，关键信息都表达清楚。', metrics: ['任务', '用时', '句子'], focus: '本次重点', improve: '只改这 3 个地方', gentle: '不一次改太多', practice: '练习这些错句', home: '返回首页', feedback: [
       ['动词变位', 'Eu querer um café.', 'Eu quero um café.', '主语是 eu，直陈式现在时使用 quero。'],
@@ -20,7 +20,7 @@ const text = {
     review: '错句复习', reviewToday: '今日复习', natural: '再说一次，就会更自然', reviewTip: '先听示范，再用自己的节奏说出来。', article: '冠词', youSaid: '你说', recommended: '建议说', translation: '我想要一杯小杯咖啡。', playing: '正在播放标准发音…', listen: '听标准发音', turn: '轮到你了', recordTip: '点击麦克风，完整说出建议句子', mastered: '✓ 已经掌握', mark: '标记为已经掌握', nav: ['首页', '练习', '复习', '我的'], back: '返回', navigation: '主要导航', profile: '个人资料', language: '切换到全葡语', startRec: '开始录音', stopRec: '结束录音',
   },
   pt: {
-    streak: 'Sequência', days: '🔥 4 dias', goal: 'Meta da semana', sessions: '3 / 5 sessões', today: 'RECOMENDADO HOJE', cafe: 'Pedido na cafeteria', level: 'A1 · cerca de 5 min', mission: 'Faça um pedido de café inteiramente em português', missionMeta: '5 etapas · Atendente de IA', start: 'Começar →', more: 'Mais situações', all: 'Ver todas', airport: 'Pedir informações no aeroporto', shopping: 'Fazer compras', min6: 'A1 · 6 min', min7: 'A2 · 7 min',
+    streak: 'Sequência', days: '4 dias', goal: 'Meta da semana', sessions: '3 / 5 sessões', today: 'RECOMENDADO HOJE', cafe: 'Pedido na cafeteria', level: 'A1 · cerca de 5 min', mission: 'Faça um pedido de café inteiramente em português', missionMeta: '5 etapas · Atendente de IA', start: 'Começar →', more: 'Mais situações', all: 'Ver todas', airport: 'Pedir informações no aeroporto', shopping: 'Fazer compras', min6: 'A1 · 6 min', min7: 'A2 · 7 min',
     prep: 'Preparação', yourMission: 'SUA MISSÃO', task: 'Peça um café com leite pequeno, pergunte o preço e pague com cartão.', stepsTitle: 'Complete estas 5 etapas', steps: ['Cumprimente a atendente', 'Diga qual bebida deseja', 'Escolha o tamanho e o leite', 'Pergunte o preço', 'Escolha a forma de pagamento'], phrases: 'Expressões úteis', enter: 'Entrar na cafeteria', clerk: 'Marina · Atendente de IA', location: 'São Paulo, Brasil · Velocidade natural', again: '↻ Ouvir novamente', said: 'Você acabou de dizer', listening: 'Estou ouvindo… toque novamente para terminar', speak: 'Fale naturalmente, no seu ritmo', finish: 'Finalizar e ver o relatório →', hint: 'Preciso de uma dica',
     report: 'Relatório da prática', complete: 'Missão concluída!', completeText: 'Você concluiu o pedido e comunicou todas as informações importantes.', metrics: ['Etapas', 'Tempo', 'Frases'], focus: 'FOCO DE HOJE', improve: 'Melhore estes 3 pontos', gentle: 'Um passo de cada vez', practice: 'Praticar estas frases', home: 'Voltar ao início', feedback: [
       ['Conjugação', 'Eu querer um café.', 'Eu quero um café.', 'Com o pronome eu, usamos quero no presente do indicativo.'],
@@ -867,10 +867,13 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     pending: '未完成',
     levelProgress: '等级进度',
     currentLesson: '当前课程',
-    learnedWords: '已学词汇',
-    reviewWords: '待复习词',
+    learnedWords: '已完成词汇',
+    reviewWords: '错词数',
     monthRate: '本月学习率',
-    vocabulary: '词汇掌握',
+    vocabulary: '词汇记录',
+    wrongWordsHelp: '来自词义选择和填句答错的词',
+    wrongWordsAction: '查看错词',
+    noWrongWords: '暂无错词',
     practice: '练习记录',
     settings: '设置',
     checkinCalendar: '打卡日历',
@@ -890,10 +893,13 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     pending: 'Pendente',
     levelProgress: 'Progresso do nível',
     currentLesson: 'Lição atual',
-    learnedWords: 'Palavras estudadas',
-    reviewWords: 'Para revisar',
+    learnedWords: 'Palavras concluídas',
+    reviewWords: 'Erros',
     monthRate: 'Dias estudados',
     vocabulary: 'Vocabulário',
+    wrongWordsHelp: 'Vem das respostas erradas no vocabulário',
+    wrongWordsAction: 'Rever erros',
+    noWrongWords: 'Sem erros',
     practice: 'Registros',
     settings: 'Configurações',
     checkinCalendar: 'Calendário',
@@ -1655,8 +1661,17 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     setMode('hub');
   }
 
+  const todayCompletedStages = todayLearningRecord?.completedStages || 0;
+  const todayHasStudyActivity = hasStudyActivity(todayLearningRecord);
+  const completedStudyDays = Object.values(activeLearningProgress.history).filter(record => record.completed).length;
+  const todayProgressText = todayLearningRecord?.completed
+    ? (language === 'zh' ? '今日已完成' : 'Concluído hoje')
+    : todayHasStudyActivity
+      ? (language === 'zh' ? '学习中' : 'Em curso')
+      : (language === 'zh' ? '未开始' : 'Ainda não iniciado');
+
   if (mode === 'level-select') return <div className="screen-enter min-h-[790px] px-6 pb-10 pt-7">
-    <header className="learning-header"><div><p className="eyebrow">Fala Português</p><h1>{language==='zh'?'选择你的难度':'Escolha o seu nível'}</h1></div><div aria-label={c.profile}>Q</div></header>
+    <header className="learning-header"><div><p className="eyebrow">Fala Português</p><h1>{language==='zh'?'选择你的难度':'Escolha o seu nível'}</h1></div></header>
     <section className="level-gate-hero mt-7"><span>01</span><h2>{language==='zh'?'先确定起点，再开始闯关':'Defina o ponto de partida'}</h2><p>{language==='zh'?'选择最接近你当前水平的等级，之后仍可以随时更改。':'Escolha o nível mais próximo do seu momento atual. Você poderá mudar depois.'}</p></section>
     <div className="level-gate-grid mt-5">{cefrLevels.map((level,index)=><button key={level} onClick={()=>chooseLevel(level)} className={selectedLevel===level?'active':''}><span>{index+1}</span><strong>{level}</strong><small>{language==='zh'?cefrInfo[level].zh:cefrInfo[level].pt}</small><b>{selectedLevel===level?'✓':'→'}</b></button>)}</div>
     <section className="selected-level-panel mt-5"><div><small>{language==='zh'?'当前选择':'Nível escolhido'}</small><strong>{selectedLevel}</strong></div><p>{language==='zh'?cefrInfo[selectedLevel].zh:cefrInfo[selectedLevel].pt}</p></section>
@@ -1664,9 +1679,9 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   </div>;
 
   if (mode === 'hub') return <div className="screen-enter min-h-[790px] px-6 pb-28 pt-7">
-    <header className="journey-header"><button onClick={()=>setMode('level-select')} aria-label={c.back}>←</button><div><p>{language==='zh'?'我的学习地图':'Meu mapa de estudo'}</p><h1>{selectedLevel} · {todayLearningRecord?.completed?(language==='zh'?'今日完成':'Concluído hoje'):(language==='zh'?`第 ${activeLearningProgress.lesson+1} 课`:`Lição ${activeLearningProgress.lesson+1}`)}</h1></div><strong>🔥 {Object.values(activeLearningProgress.history).filter(record=>record.completed).length}</strong></header>
-    <section className="journey-status mt-6"><div><span>{language==='zh'?'今日闯关进度':'Progresso de hoje'}</span><b>{todayLearningRecord?.completedStages || 0}/{journeyStages.length}</b></div><div><span style={{width:`${Math.max(5, ((todayLearningRecord?.completedStages || 0) / journeyStages.length) * 100)}%`}}/></div><small>{todayLearningRecord?.completed?(language==='zh'?'今天的任务已完成；四关均可点击复习，明天自动进入下一课。':'Tarefa concluída. Você pode rever qualquer fase; amanhã continuará na próxima lição.'):(language==='zh'?'完成一关自动解锁下一关；已完成关卡可以返回复习且不重复计入进度。':'Conclua uma fase para liberar a próxima. Fases concluídas podem ser revistas sem duplicar o progresso.')}</small></section>
-    <section className="learning-history mt-4"><div className="learning-history-title"><strong>{language==='zh'?'最近7天':'Últimos 7 dias'}</strong><small>{language==='zh'?'完成 · 学习中 · 未学习':'Concluído · Em curso · Sem estudo'}</small></div><div className="learning-history-days">{recentLearningDays.map(item=><div key={item.key} className={item.beforeStart?'future':item.record?.completed?'done':item.record?'partial':'missed'}><span>{item.day}</span><b>{item.record?.completed?'✓':item.record?item.record.completedStages:'·'}</b><small>{item.date}</small></div>)}</div></section>
+    <header className="journey-header"><button onClick={()=>setMode('level-select')} aria-label={c.back}>←</button><div><p>{language==='zh'?'我的学习地图':'Meu mapa de estudo'}</p><h1>{selectedLevel} · {todayLearningRecord?.completed?(language==='zh'?'今日完成':'Concluído hoje'):(language==='zh'?`第 ${activeLearningProgress.lesson+1} 课`:`Lição ${activeLearningProgress.lesson+1}`)}</h1></div><strong className="journey-days-badge"><span>{completedStudyDays}</span><small>{language==='zh'?'完成天数':'dias'}</small></strong></header>
+    <section className="journey-status mt-6"><div><span>{language==='zh'?'今日完成关卡':'Fases concluídas hoje'}</span><b>{todayCompletedStages}/{journeyStages.length}</b></div><div><span style={{width:`${Math.max(5, (todayCompletedStages / journeyStages.length) * 100)}%`}}/></div><small>{todayLearningRecord?.completed?(language==='zh'?'今天的任务已完成；四关均可点击复习，明天自动进入下一课。':'Tarefa concluída. Você pode rever qualquer fase; amanhã continuará na próxima lição.'):(language==='zh'?`当前状态：${todayProgressText}。进入练习会记录为学习过，完成关卡后才会增加 0/4 进度。`:`Estado: ${todayProgressText}. Abrir uma fase registra estudo; o progresso só aumenta ao concluir a fase.`)}</small></section>
+    <section className="learning-history mt-4"><div className="learning-history-title"><strong>{language==='zh'?'最近 7 天学习记录':'Últimos 7 dias'}</strong><small>{language==='zh'?'✓ 完成 · • 学习过 · · 未学习':'✓ concluído · • estudou · · sem estudo'}</small></div><div className="learning-history-days">{recentLearningDays.map(item=>{const studied=hasStudyActivity(item.record); return <div key={item.key} className={item.beforeStart?'future':item.record?.completed?'done':studied?'partial':'missed'}><span>{item.day}</span><b>{item.record?.completed?'✓':studied?'•':'·'}</b><small>{item.date}</small></div>})}</div></section>
     <div className="journey-map mt-7">{journeyStages.map((stage,index)=>{const completed=(todayLearningRecord?.completedStages||0)>index; const locked=!todayLearningRecord?.completed&&index>activeLearningProgress.stage; const current=!todayLearningRecord?.completed&&index===activeLearningProgress.stage; return <div key={stage.mode} className={`journey-node node-${index+1} ${completed?'complete':''} ${locked?'locked':''} ${current?'current':''}`}><button disabled={locked} onClick={()=>openJourneyStage(index,stage.mode)}><span>{completed?'✓':locked?'🔒':stage.icon}</span><b>{index+1}</b></button><div><small>{completed?(language==='zh'?'已完成 · 点击复习':'Concluído · Rever'):locked?(language==='zh'?'完成上一关解锁':'Complete a fase anterior'):(language==='zh'?`当前 · 第 ${index+1} 关`:`Atual · Fase ${index+1}`)}</small><strong>{stage.title}</strong><p>{stage.meta}</p></div></div>})}</div>
     <Nav c={c} active="practice" onPractice={()=>setMode('hub')} onVerbs={()=>setMode('verbs')} onProfile={openProfile}/>
   </div>;
@@ -1681,7 +1696,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     <section className="profile-overview mt-6">
       <article><small>{profileUi.streak}</small><strong>{profileStreakDays}</strong><span>{language==='zh'?'天':'dias'}</span></article>
       <article><small>{profileUi.totalDays}</small><strong>{studiedDayKeys.size}</strong><span>{language==='zh'?'天':'dias'}</span></article>
-      <article className={todayLearningRecord?.completed?'done':''}><small>{profileUi.todayDone}</small><strong>{todayLearningRecord?.completed?'✓':(todayLearningRecord?.completedStages || 0)}</strong><span>{todayLearningRecord?.completed?profileUi.done:profileUi.pending}</span></article>
+      <article className={todayLearningRecord?.completed?'done':''}><small>{profileUi.todayDone}</small><strong>{todayLearningRecord?.completed?'✓':todayCompletedStages}</strong><span>{todayLearningRecord?.completed?profileUi.done:todayProgressText}</span></article>
     </section>
     <section className="profile-card mt-4">
       <div className="profile-card-title"><strong>{profileUi.levelProgress}</strong><span>{currentLevelProgress}%</span></div>
@@ -1706,7 +1721,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       </div>
     </section>
     <section className="profile-two-col mt-4">
-      <article className="profile-card compact"><div className="profile-card-title"><strong>{profileUi.vocabulary}</strong><span>{vocabLoopStats.cycle}</span></div><p><b>{learnedWordEstimate}</b>{profileUi.learnedWords}</p><p><b>{activeMistakeWords.length}</b>{profileUi.reviewWords}</p></article>
+      <article className="profile-card compact"><div className="profile-card-title"><strong>{profileUi.vocabulary}</strong><span>{vocabLoopStats.cycle}</span></div><p><b>{learnedWordEstimate}</b>{profileUi.learnedWords}</p><p><b>{activeMistakeWords.length}</b>{profileUi.reviewWords}</p><small className="profile-card-note">{profileUi.wrongWordsHelp}</small><button type="button" className="profile-link-button" disabled={!activeMistakeWords.length} onClick={()=>{setVocabDeckIndex(plannedVocabDeckIndex(selectedLevel)); setVocabPhase('review'); setMode('vocab');}}>{activeMistakeWords.length?profileUi.wrongWordsAction:profileUi.noWrongWords}</button></article>
       <article className="profile-card compact"><div className="profile-card-title"><strong>{profileUi.practice}</strong><span>{profileUi.next}</span></div><p><b>{Object.values(activeLearningProgress.history).filter(record=>record.completedStages>=2).length}</b>{skillUi.listening}</p><p><b>{Object.values(activeLearningProgress.history).filter(record=>record.completedStages>=4).length}</b>{skillUi.speaking}</p></article>
     </section>
     <section className="profile-settings mt-4">

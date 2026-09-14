@@ -144,14 +144,14 @@ button:focus-visible {
 
 .language-toggle {
   position: absolute;
-  z-index: 20;
-  top: 18px;
-  right: 24px;
+  z-index: 40;
+  top: 34px;
+  right: 28px;
   display: flex;
   gap: 2px;
   border: 1px solid rgba(24,53,47,.10);
   border-radius: 999px;
-  background: rgba(255,255,255,.92);
+  background: rgba(255,255,255,.98);
   padding: 3px;
   box-shadow: 0 6px 18px rgba(24,53,47,.08);
   backdrop-filter: blur(10px);
@@ -725,8 +725,8 @@ button:focus-visible {
 .azulejo-corners span {
   position: absolute;
   display: grid;
-  width: 54px;
-  height: 54px;
+  width: 46px;
+  height: 46px;
   place-items: center;
   border-top: 3px double var(--tile-blue);
   border-left: 3px double var(--tile-blue);
@@ -734,15 +734,16 @@ button:focus-visible {
   background: radial-gradient(circle at 22% 22%, rgba(200,218,75,.58), rgba(255,250,240,.88) 43%, transparent 45%);
   color: var(--tile-blue);
   font-family: Georgia, serif;
-  font-size: 27px;
+  font-size: 23px;
+  opacity: .72;
   line-height: 1;
   text-shadow: 1px 1px 0 white;
 }
 
 .azulejo-corners span::after {
   position: absolute;
-  width: 38px;
-  height: 38px;
+  width: 31px;
+  height: 31px;
   border-top: 1px solid var(--tile-blue-light);
   border-left: 1px solid var(--tile-blue-light);
   border-radius: 14px 0 18px 0;
@@ -883,12 +884,11 @@ button:focus-visible {
   color: var(--tile-blue);
 }
 
-.app-topbar { padding-top: 42px; }
+.app-topbar { min-height: 116px; padding-top: 76px; }
 .app-topbar h1 { min-width: 0; padding: 0 10px; overflow-wrap: anywhere; line-height: 1.2; }
 .app-topbar button { position: relative; z-index: 3; }
-.learning-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 44px; padding-left: 24px; }
+.learning-header { display: block; padding-top: 76px; padding-left: 24px; padding-right: 90px; }
 .learning-header h1 { margin-top: 3px; color: var(--tile-blue); font-size: 25px; font-weight: 900; }
-.learning-header > div:last-child { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid rgba(18,61,130,.16); border-radius: 50%; background: var(--tile-paper); color: var(--tile-blue); font-weight: 900; }
 
 .level-gate-hero { position: relative; overflow: hidden; border: 2px solid var(--tile-blue); border-radius: 24px; background: var(--tile-blue); padding: 20px; color: white; }
 .level-gate-hero > span { position: absolute; top: -13px; right: 10px; color: rgba(200,218,75,.20); font-family: Impact, "Arial Narrow", sans-serif; font-size: 84px; line-height: 1; }
@@ -910,11 +910,14 @@ button:focus-visible {
 .enter-journey-button { display: flex; width: 100%; align-items: center; justify-content: space-between; border-radius: 16px; background: var(--tile-lime); padding: 15px 17px; color: var(--tile-blue); font-size: 14px; font-weight: 900; box-shadow: 0 7px 0 #8fa52c; }
 .enter-journey-button:active { transform: translateY(4px); box-shadow: 0 3px 0 #8fa52c; }
 
-.journey-header { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 10px; color: var(--tile-blue); }
+.journey-header { display: grid; grid-template-columns: 38px minmax(0,1fr) auto; align-items: end; gap: 10px; padding-top: 76px; color: var(--tile-blue); }
 .journey-header > button { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 50%; background: var(--tile-paper); font-size: 17px; font-weight: 900; }
 .journey-header p { color: rgba(23,52,99,.55); font-size: 9px; font-weight: 900; }
-.journey-header h1 { margin-top: 2px; font-size: 20px; font-weight: 900; }
+.journey-header h1 { margin-top: 2px; overflow-wrap: anywhere; font-size: 20px; font-weight: 900; }
 .journey-header > strong { border-radius: 999px; background: #edf1bd; padding: 7px 9px; font-size: 10px; }
+.journey-days-badge { display: grid; min-width: 54px; place-items: center; border: 1px solid rgba(18,61,130,.15); border-radius: 14px !important; padding: 5px 7px !important; text-align: center; }
+.journey-days-badge span { font-size: 14px; line-height: 1; }
+.journey-days-badge small { margin-top: 2px; color: rgba(23,52,99,.58); font-size: 7px; font-weight: 900; line-height: 1.1; }
 .journey-status { border: 1px solid rgba(18,61,130,.15); border-radius: 17px; background: var(--tile-paper); padding: 13px; color: var(--tile-blue); }
 .journey-status > div:first-child { display: flex; justify-content: space-between; font-size: 10px; font-weight: 900; }
 .journey-status > div:nth-child(2) { height: 7px; overflow: hidden; margin-top: 8px; border-radius: 999px; background: rgba(18,61,130,.10); }
@@ -948,7 +951,7 @@ button:focus-visible {
 .journey-node.locked { opacity: .48; }
 .journey-node.locked > button { background: #dfe4da; box-shadow: 0 5px 0 #89999a; }
 .journey-node.locked > div { background: rgba(232,235,226,.72); }
-.profile-header { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 14px; padding-top: 28px; color: var(--tile-blue); }
+.profile-header { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; gap: 14px; padding-top: 76px; color: var(--tile-blue); }
 .profile-header h1 { margin-top: 3px; font-size: 22px; font-weight: 900; letter-spacing: 0; }
 .profile-header small { display: block; margin-top: 5px; color: rgba(23,52,99,.58); font-size: 10px; font-weight: 800; line-height: 1.45; }
 .profile-header > span { display: grid; width: 48px; height: 48px; place-items: center; border: 3px solid var(--tile-blue); border-radius: 16px; background: var(--tile-lime); color: var(--tile-blue); font-size: 17px; font-weight: 950; box-shadow: 3px 3px 0 var(--tile-blue); }
@@ -1006,6 +1009,9 @@ button:focus-visible {
 .profile-card.compact { padding: 12px; }
 .profile-card.compact p { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 10px; color: rgba(23,52,99,.62); font-size: 9px; font-weight: 900; }
 .profile-card.compact p b { color: var(--tile-blue); font-size: 18px; font-weight: 950; }
+.profile-card-note { display: block; margin-top: 8px; color: rgba(23,52,99,.50); font-size: 8px; font-weight: 850; line-height: 1.35; }
+.profile-link-button { width: 100%; margin-top: 9px; border-radius: 10px; background: var(--tile-blue); padding: 8px 10px; color: white; font-size: 9px; font-weight: 950; }
+.profile-link-button:disabled { background: rgba(18,61,130,.12); color: rgba(23,52,99,.42); }
 .profile-settings h2 { color: var(--tile-blue); font-size: 14px; font-weight: 950; }
 .profile-settings div { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; border-top: 1px solid rgba(18,61,130,.10); padding-top: 10px; }
 .profile-settings span { color: rgba(23,52,99,.60); font-size: 10px; font-weight: 900; }
