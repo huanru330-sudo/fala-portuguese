@@ -752,8 +752,18 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const nextVocabDeck = vocabularyDecks[nextDeckIndex];
   const nextCycle = levelDeckPosition === levelDeckIndices.length - 1 ? vocabLoopStats.cycle + 1 : vocabLoopStats.cycle;
   const loopFocusIndex = (vocabLoopStats.cycle - 1) % 4;
+  const activeLearningProgress: LevelLearningProgress = learningProgress[selectedLevel] || { lesson: 0, stage: 0, startedOn: dayKey, history: {} };
   const totalVocabularyWords = levelDeckIndices.reduce((sum, index) => sum + vocabularyDecks[index].words.length, 0);
-  const learnedWordEstimate = Math.min(totalVocabularyWords, vocabLoopStats.completedWordTotal);
+  const completedVocabularyDays = Object.values(activeLearningProgress.history).filter(record => record.completed || (record.completedStages || 0) > 0).length;
+  const learnedWordEstimate = Math.min(
+    totalVocabularyWords,
+    Math.max(
+      vocabLoopStats.completedWordTotal,
+      vocabLoopStats.completedTopics.filter(index=>levelDeckIndices.includes(index)).length * 10,
+      completedVocabularyDays * 10,
+      activeLearningProgress.lesson * 10,
+    ),
+  );
   const weeklySessions = vocabLoopStats.sessions % 7;
   const activeMistakeWords = vocabLoopStats.mistakeWords.slice(0, 5);
   const allVocabularyItems = vocabularyDecks.flatMap((deck, deckIndex) => deck.words.map((word, wordIndex) => ({ word, id: deckIndex * 100 + wordIndex })));
@@ -766,7 +776,6 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     : 100;
   const verbStartIndex = Array.from(`${dayKey}-${selectedLevel}`).reduce((sum, character) => sum + character.charCodeAt(0), 0) % verbQuestions.length;
   const verb = verbQuestions[(verbStartIndex + verbRound * 5 + verbStep) % verbQuestions.length];
-  const activeLearningProgress: LevelLearningProgress = learningProgress[selectedLevel] || { lesson: 0, stage: 0, startedOn: dayKey, history: {} };
   const todayLearningRecord = activeLearningProgress.history[dayKey];
   const skillExerciseIndex = Math.max(
     activeLearningProgress.lesson,
@@ -1678,6 +1687,18 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     : todayHasStudyActivity
       ? (language === 'zh' ? '学习中' : 'Em curso')
       : (language === 'zh' ? '未开始' : 'Ainda não iniciado');
+  const todayStatusValue = todayLearningRecord?.completed
+    ? '✓'
+    : todayCompletedStages > 0
+      ? `${todayCompletedStages}/${journeyStages.length}`
+      : todayHasStudyActivity
+        ? (language === 'zh' ? '学习中' : 'Em curso')
+        : (language === 'zh' ? '未开始' : 'Sem estudo');
+  const todayStatusMeta = todayLearningRecord?.completed
+    ? profileUi.done
+    : todayCompletedStages > 0
+      ? (language === 'zh' ? '已完成关卡' : 'Fases concluídas')
+      : todayProgressText;
 
   if (mode === 'level-select') return <div className="screen-enter min-h-[790px] px-6 pb-10 pt-7">
     <header className="learning-header"><div><p className="eyebrow">Fala Português</p><h1>{language==='zh'?'选择你的难度':'Escolha o seu nível'}</h1></div></header>
@@ -1704,7 +1725,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     <section className="profile-overview mt-6">
       <article><small>{profileUi.streak}</small><strong>{profileStreakDays}</strong><span>{language==='zh'?'天':'dias'}</span></article>
       <article><small>{profileUi.totalDays}</small><strong>{studiedDayKeys.size}</strong><span>{language==='zh'?'天':'dias'}</span></article>
-      <article className={todayLearningRecord?.completed?'done':''}><small>{profileUi.todayDone}</small><strong>{todayLearningRecord?.completed?'✓':todayCompletedStages}</strong><span>{todayLearningRecord?.completed?profileUi.done:todayProgressText}</span></article>
+      <article className={todayLearningRecord?.completed?'done':''}><small>{profileUi.todayDone}</small><strong className="profile-status-text">{todayStatusValue}</strong><span>{todayStatusMeta}</span></article>
     </section>
     <section className="profile-card mt-4">
       <div className="profile-card-title"><strong>{profileUi.levelProgress}</strong><span>{currentLevelProgress}%</span></div>
@@ -1725,7 +1746,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       <div className="profile-month-grid">
         {profileWeekdays.map(day => <b key={day}>{day}</b>)}
         {Array.from({length: profileCalendarMonth.firstWeekday}).map((_, index) => <i key={`empty-${index}`}/>)}
-        {profileCalendarMonth.days.map(item => <span key={item.key} className={item.record?.completed?'done':item.record?.studied || item.record?.completedStages ? 'partial' : ''}>{item.day}</span>)}
+        {profileCalendarMonth.days.map(item => <span key={item.key} className={item.record?.completed || (item.record?.completedStages || 0) > 0 ? 'done' : item.record?.studied ? 'partial' : ''}>{item.day}</span>)}
       </div>
     </section>
     <section className="profile-settings mt-4">
