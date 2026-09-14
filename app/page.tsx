@@ -133,6 +133,7 @@ type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
 type VocabLoopStats = {
   cycle: number;
   sessions: number;
+  completedWordTotal: number;
   completedTopics: number[];
   mistakeWords: string[];
   lastCompletedDate: string;
@@ -156,6 +157,7 @@ const JOURNEY_STAGE_COUNT = 4;
 const defaultVocabLoopStats: VocabLoopStats = {
   cycle: 1,
   sessions: 0,
+  completedWordTotal: 0,
   completedTopics: [],
   mistakeWords: [],
   lastCompletedDate: '',
@@ -196,6 +198,11 @@ function normalizeVocabLoopStats(value: unknown): VocabLoopStats {
   return {
     cycle: Math.max(1, Number(saved.cycle) || 1),
     sessions: Math.max(0, Number(saved.sessions) || 0),
+    completedWordTotal: Math.max(
+      0,
+      Number(saved.completedWordTotal) ||
+      Math.max(Number(saved.sessions) || 0, Array.isArray(saved.completedTopics) ? saved.completedTopics.length : 0) * 10,
+    ),
     completedTopics: Array.isArray(saved.completedTopics) ? saved.completedTopics.filter((item: unknown) => Number.isInteger(item)) : [],
     mistakeWords: Array.isArray(saved.mistakeWords) ? saved.mistakeWords.filter((item: unknown) => typeof item === 'string') : [],
     lastCompletedDate: typeof saved.lastCompletedDate === 'string' ? saved.lastCompletedDate : '',
@@ -746,7 +753,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const nextCycle = levelDeckPosition === levelDeckIndices.length - 1 ? vocabLoopStats.cycle + 1 : vocabLoopStats.cycle;
   const loopFocusIndex = (vocabLoopStats.cycle - 1) % 4;
   const totalVocabularyWords = levelDeckIndices.reduce((sum, index) => sum + vocabularyDecks[index].words.length, 0);
-  const learnedWordEstimate = Math.min(totalVocabularyWords, vocabLoopStats.completedTopics.filter(index=>levelDeckIndices.includes(index)).length * 10);
+  const learnedWordEstimate = Math.min(totalVocabularyWords, vocabLoopStats.completedWordTotal);
   const weeklySessions = vocabLoopStats.sessions % 7;
   const activeMistakeWords = vocabLoopStats.mistakeWords.slice(0, 5);
   const allVocabularyItems = vocabularyDecks.flatMap((deck, deckIndex) => deck.words.map((word, wordIndex) => ({ word, id: deckIndex * 100 + wordIndex })));
@@ -867,7 +874,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     pending: '未完成',
     levelProgress: '等级进度',
     currentLesson: '当前课程',
-    learnedWords: '已完成词汇',
+    learnedWords: '累计完成词汇',
     reviewWords: '错词数',
     monthRate: '本月学习率',
     vocabulary: '词汇记录',
@@ -893,7 +900,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     pending: 'Pendente',
     levelProgress: 'Progresso do nível',
     currentLesson: 'Lição atual',
-    learnedWords: 'Palavras concluídas',
+    learnedWords: 'Palavras acumuladas',
     reviewWords: 'Erros',
     monthRate: 'Dias estudados',
     vocabulary: 'Vocabulário',
@@ -1540,11 +1547,13 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
 
   function completeCheckIn() {
     if (revealedReview.length < reviewItems.length) return;
+    const alreadyCompletedTopic = vocabLoopStats.completedTopics.includes(vocabDeckIndex);
     const completedTopics = [...new Set([...vocabLoopStats.completedTopics, vocabDeckIndex])];
     const countedToday = vocabLoopStats.lastCompletedDate === dayKey;
     const nextStats = {
       ...vocabLoopStats,
       sessions: countedToday ? vocabLoopStats.sessions : vocabLoopStats.sessions + 1,
+      completedWordTotal: Math.min(totalVocabularyWords, vocabLoopStats.completedWordTotal + (alreadyCompletedTopic ? 0 : todaysWords.length)),
       completedTopics,
       lastCompletedDate: dayKey,
     };
@@ -1718,10 +1727,6 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         {Array.from({length: profileCalendarMonth.firstWeekday}).map((_, index) => <i key={`empty-${index}`}/>)}
         {profileCalendarMonth.days.map(item => <span key={item.key} className={item.record?.completed?'done':item.record?.studied || item.record?.completedStages ? 'partial' : ''}>{item.day}</span>)}
       </div>
-    </section>
-    <section className="profile-two-col mt-4">
-      <article className="profile-card compact"><div className="profile-card-title"><strong>{profileUi.vocabulary}</strong><span>{vocabLoopStats.cycle}</span></div><p><b>{learnedWordEstimate}</b>{profileUi.learnedWords}</p><p><b>{activeMistakeWords.length}</b>{profileUi.reviewWords}</p><small className="profile-card-note">{profileUi.wrongWordsHelp}</small><button type="button" className="profile-link-button" disabled={!activeMistakeWords.length} onClick={()=>{setVocabDeckIndex(plannedVocabDeckIndex(selectedLevel)); setVocabPhase('review'); setMode('vocab');}}>{activeMistakeWords.length?profileUi.wrongWordsAction:profileUi.noWrongWords}</button></article>
-      <article className="profile-card compact"><div className="profile-card-title"><strong>{profileUi.practice}</strong><span>{profileUi.next}</span></div><p><b>{Object.values(activeLearningProgress.history).filter(record=>record.completedStages>=2).length}</b>{skillUi.listening}</p><p><b>{Object.values(activeLearningProgress.history).filter(record=>record.completedStages>=4).length}</b>{skillUi.speaking}</p></article>
     </section>
     <section className="profile-settings mt-4">
       <h2>{profileUi.settings}</h2>
