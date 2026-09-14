@@ -952,8 +952,9 @@ button:focus-visible {
 .journey-node.locked > button { background: #dfe4da; box-shadow: 0 5px 0 #89999a; }
 .journey-node.locked > div { background: rgba(232,235,226,.72); }
 .profile-header { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; gap: 14px; padding-top: 76px; color: var(--tile-blue); }
-.profile-header h1 { margin-top: 3px; font-size: 22px; font-weight: 900; letter-spacing: 0; }
-.profile-header small { display: block; margin-top: 5px; color: rgba(23,52,99,.58); font-size: 10px; font-weight: 800; line-height: 1.45; }
+.profile-header .eyebrow { font-size: 14px; letter-spacing: .08em; line-height: 1.2; }
+.profile-header h1 { margin-top: 7px; font-size: 32px; font-weight: 950; letter-spacing: 0; line-height: 1.05; }
+.profile-header small { display: block; max-width: 250px; margin-top: 10px; color: rgba(23,52,99,.64); font-size: 12px; font-weight: 850; line-height: 1.45; }
 .profile-header > span { display: grid; width: 48px; height: 48px; place-items: center; border: 3px solid var(--tile-blue); border-radius: 16px; background: var(--tile-lime); color: var(--tile-blue); font-size: 17px; font-weight: 950; box-shadow: 3px 3px 0 var(--tile-blue); }
 .account-sync { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid rgba(18,61,130,.13); border-radius: 15px; background: rgba(255,255,255,.68); padding: 11px 12px; color: var(--tile-blue); }
 .account-sync strong,
