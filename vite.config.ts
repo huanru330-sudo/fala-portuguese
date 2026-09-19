@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 import hostingConfig from './.openai/hosting.json';
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
-  '00000000-0000-4000-8000-000000000000';
+  '297f2082-32a8-445f-8b24-431824a75f22';
 const D1_DATABASE_NAME = process.env.CLOUDFLARE_D1_DATABASE_NAME || 'site-creator-d1';
 const D1_DATABASE_ID =
   process.env.CLOUDFLARE_D1_DATABASE_ID || SITE_CREATOR_PLACEHOLDER_DATABASE_ID;
