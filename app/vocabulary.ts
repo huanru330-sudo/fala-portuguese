@@ -165,20 +165,54 @@ function exactFormInExample(example: string, word: string) {
   return undefined;
 }
 
+function inflectedCandidates(word: string) {
+  const candidates = new Set<string>([word]);
+
+  candidates.add(`${word}s`);
+  if (word.endsWith('ão')) {
+    candidates.add(`${word.slice(0, -2)}ões`);
+    candidates.add(`${word.slice(0, -2)}ães`);
+    candidates.add(`${word.slice(0, -2)}ãos`);
+  }
+  if (word.endsWith('m')) candidates.add(`${word.slice(0, -1)}ns`);
+  if (/[rz]$/.test(word)) candidates.add(`${word}es`);
+  if (word.endsWith('l')) candidates.add(`${word.slice(0, -1)}is`);
+
+  return [...candidates];
+}
+
 function contextGap(example: string, word: string) {
-  const exact = exactFormInExample(example, word);
+  const exact = inflectedCandidates(word).map(candidate => exactFormInExample(example, candidate)).find(Boolean);
   if (exact) return { sentence: example.replace(exact, '___'), answer: exact };
 
-  const tokens = example.match(/\p{L}+(?:-\p{L}+)*/gu) || [];
+  const tokens = [...example.matchAll(/\p{L}+(?:-\p{L}+)*/gu)].map(match => ({
+    text: match[0],
+    start: match.index || 0,
+    end: (match.index || 0) + match[0].length,
+  }));
   const normalizedWord = normalizePortuguese(word);
-  const isInfinitive = /(?:ar|er|ir)$/.test(normalizedWord);
-  const verbStem = isInfinitive ? normalizedWord.slice(0, -2) : '';
+  const reflexiveBase = normalizedWord.endsWith('-se') ? normalizedWord.slice(0, -3) : '';
+  const isInfinitive = /(?:ar|er|ir|or)$/.test(reflexiveBase || normalizedWord);
+  const verbStem = isInfinitive ? (reflexiveBase || normalizedWord).slice(0, -2) : '';
   const flexibleStem = /[aoe]$/.test(normalizedWord) ? normalizedWord.slice(0, -1) : normalizedWord;
+
+  if (reflexiveBase && verbStem.length >= 3) {
+    const reflexive = tokens.find((token, index) => {
+      const next = tokens[index + 1];
+      return normalizePortuguese(token.text) === 'se' && next && normalizePortuguese(next.text).startsWith(verbStem);
+    });
+    if (reflexive) {
+      const next = tokens[tokens.indexOf(reflexive) + 1];
+      const phrase = example.slice(reflexive.start, next.end);
+      return { sentence: example.replace(phrase, '___'), answer: phrase };
+    }
+  }
+
   const inflected = tokens.find(token => {
-    const normalizedToken = normalizePortuguese(token);
+    const normalizedToken = normalizePortuguese(token.text);
     if (isInfinitive && verbStem.length >= 3 && normalizedToken.startsWith(verbStem)) return true;
     return flexibleStem.length >= 4 && normalizedToken.startsWith(flexibleStem);
-  });
+  })?.text;
 
   const answer = inflected || word;
   return { sentence: inflected ? example.replace(inflected, '___') : example, answer };
