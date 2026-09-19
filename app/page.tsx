@@ -913,7 +913,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const currentMonthPrefix = dayKey.slice(0, 7);
   const daysElapsedThisMonth = new Date().getDate();
   const studiedThisMonth = Array.from(studiedDayKeys).filter(key => key.startsWith(currentMonthPrefix)).length;
-  const monthlyCompletionRate = Math.min(100, Math.round((studiedThisMonth / daysElapsedThisMonth) * 100));
+  const monthlyStudyRatio = `${studiedThisMonth}/${daysElapsedThisMonth}`;
   const profileUi = language === 'zh' ? {
     title: '我的学习',
     subtitle: '今天的状态、等级进度和词汇掌握都放在这里。',
@@ -1775,7 +1775,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       <div className="profile-metrics">
         <span><b>{selectedLevel} · {activeLearningProgress.lesson + 1}/{levelDeckIndices.length}</b><small>{profileUi.currentLesson}</small></span>
         <span><b>{allTimeCompletedWordEstimate}</b><small>{profileUi.learnedWords}</small></span>
-        <span><b>{monthlyCompletionRate}%</b><small>{profileUi.monthRate}</small></span>
+        <span><b>{monthlyStudyRatio}</b><small>{profileUi.monthRate}</small></span>
       </div>
     </section>
     <section className="profile-calendar mt-4">
@@ -1788,7 +1788,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       <div className="profile-month-grid">
         {profileWeekdays.map(day => <b key={day}>{day}</b>)}
         {Array.from({length: profileCalendarMonth.firstWeekday}).map((_, index) => <i key={`empty-${index}`}/>)}
-        {profileCalendarMonth.days.map(item => <span key={item.key} className={item.record?.completed || (item.record?.completedStages || 0) > 0 ? 'done' : item.record?.studied ? 'partial' : ''}>{item.day}</span>)}
+        {profileCalendarMonth.days.map(item => <span key={item.key} className={item.record?.completed ? 'done' : item.record?.studied || (item.record?.completedStages || 0) > 0 ? 'partial' : ''}>{item.day}</span>)}
       </div>
     </section>
     <section className="profile-settings mt-4">
