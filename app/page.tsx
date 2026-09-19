@@ -420,12 +420,46 @@ function rotatedOptions(options: string[], correctIndex: number) {
   return { options: rotated, answer: rotated.indexOf(options[0]) };
 }
 
+function buildReadingExercise(level: CEFRLevel, topic: SkillTopic, focus: typeof skillFocuses[number], dayIndex: number): CefrExerciseSet['reading'] {
+  const readingText: Record<CEFRLevel, string> = {
+    A1: `Hoje estou ${topic.place}. Primeiro vou ${topic.action}. Depois vou ${topic.result}. Atenção: ${topic.contrast}.`,
+    A2: `Mensagem: estou ${topic.place} e preciso ${topic.action} ${focus.phrase}. Se tudo der certo, vou ${topic.result}. O problema é que ${topic.contrast}.`,
+    B1: `A experiência com ${topic.pt} começou ${topic.place}. A pessoa tentou ${topic.action} ${focus.phrase}. A principal dificuldade foi que ${topic.contrast}, mas o objetivo era ${topic.result}.`,
+    B2: `A proposta ligada a ${topic.pt} parte de um problema concreto: ${topic.contrast}. Por isso, o grupo decidiu ${topic.action} ${focus.phrase}. A expectativa é ${topic.result}, desde que haja acompanhamento.`,
+    C1: `No contexto de ${topic.pt}, a questão não se resume a uma decisão rápida. Convém ${topic.action} ${focus.phrase}, pois isso pode ${topic.result}. Ainda assim, ${topic.contrast}, o que exige critérios claros de avaliação.`,
+    C2: `Em ${topic.pt}, ${topic.action} não é apenas um procedimento técnico, mas uma forma de reorganizar o próprio problema. Esse movimento permite ${topic.result}; contudo, ${topic.contrast}. A leitura central depende de perceber essa tensão, não apenas de identificar palavras isoladas.`,
+  };
+  const questions: Record<CEFRLevel, { zh: string; pt: string }> = {
+    A1: { zh: '这个人接下来要做什么？', pt: 'O que a pessoa vai fazer depois?' },
+    A2: { zh: '如果顺利，接下来会发生什么？', pt: 'Se tudo der certo, o que vai acontecer?' },
+    B1: { zh: '这段文字的目标是什么？', pt: 'Qual é o objetivo apresentado no texto?' },
+    B2: { zh: '这项提议希望达到什么结果？', pt: 'Que resultado a proposta espera alcançar?' },
+    C1: { zh: '作者认为这个做法可能带来什么作用？', pt: 'Que efeito o texto atribui a essa ação?' },
+    C2: { zh: '这段文字的核心张力是什么？', pt: 'Qual é a tensão central do texto?' },
+  };
+  const optionSets: Record<CEFRLevel, string[]> = {
+    A1: [topic.result, topic.action, topic.contrast],
+    A2: [topic.result, topic.contrast, topic.action],
+    B1: [topic.result, topic.contrast, topic.action],
+    B2: [topic.result, topic.contrast, topic.action],
+    C1: [topic.result, topic.contrast, topic.action],
+    C2: [topic.result, topic.contrast, topic.action],
+  };
+  const options = rotatedOptions(optionSets[level], dayIndex + 1);
+  return {
+    text: readingText[level],
+    questionZh: questions[level].zh,
+    questionPt: questions[level].pt,
+    options: options.options,
+    answer: options.answer,
+  };
+}
+
 function getDailyCefrExercise(level: CEFRLevel, dayIndex: number): CefrExerciseSet {
   const base = cefrExercises[level];
   const topic = skillTopics[level][dayIndex % skillTopics[level].length];
   const focus = skillFocuses[Math.floor(dayIndex / skillTopics[level].length) % skillFocuses.length];
   const listeningOptions = rotatedOptions([topic.pt, topic.wrong[0], topic.wrong[1]], dayIndex);
-  const readingOptions = rotatedOptions([focus.pt, topic.wrong[1], topic.wrong[0]], dayIndex + 1);
   const levelIntro: Record<CEFRLevel, string> = {
     A1: `Hoje, ${topic.place}, vou ${topic.action}. Depois vou ${topic.result}.`,
     A2: `Ontem, ${topic.place}, precisei ${topic.action} ${focus.phrase}. No fim, consegui ${topic.result}.`,
@@ -433,14 +467,6 @@ function getDailyCefrExercise(level: CEFRLevel, dayIndex: number): CefrExerciseS
     B2: `Ao discutir ${topic.pt}, o grupo propôs ${topic.action} ${focus.phrase}. A medida poderia ${topic.result}; no entanto, ${topic.contrast}.`,
     C1: `No contexto de ${topic.pt}, convém ${topic.action} ${focus.phrase}. Tal movimento tende a ${topic.result}, embora ${topic.contrast}.`,
     C2: `A reflexão sobre ${topic.pt} exige ${topic.action} ${focus.phrase}; desse modo, torna-se possível ${topic.result}, sem apagar que ${topic.contrast}.`,
-  };
-  const readingText: Record<CEFRLevel, string> = {
-    A1: `${topic.pt.toUpperCase()}: hoje ${topic.action}. Atenção: ${topic.contrast}.`,
-    A2: `Mensagem: vou ${topic.action} ${focus.phrase}. Se tudo der certo, posso ${topic.result}.`,
-    B1: `A experiência com ${topic.pt} mostrou que ${topic.action} ajuda quando há organização. Mesmo assim, ${topic.contrast}, então o resultado depende de continuidade.`,
-    B2: `A proposta ligada a ${topic.pt} promete ${topic.result}. Contudo, sua eficácia depende de planejamento, pois ${topic.contrast}.`,
-    C1: `A análise de ${topic.pt} ganha consistência quando procura ${topic.action}. O ganho interpretativo é claro, mas ${topic.contrast}.`,
-    C2: `Em ${topic.pt}, ${topic.action} não é apenas procedimento técnico: é uma forma de reconfigurar o objeto. Ainda assim, ${topic.contrast}.`,
   };
 
   return {
@@ -457,13 +483,7 @@ function getDailyCefrExercise(level: CEFRLevel, dayIndex: number): CefrExerciseS
       cues: [topic.action, focus.pt, topic.result],
       model: `${levelIntro[level]} Na minha opinião, isso ajuda a praticar vocabulário e organizar melhor as ideias.`,
     },
-    reading: {
-      text: readingText[level],
-      questionZh: `材料重点训练哪类理解？`,
-      questionPt: 'Que tipo de compreensão este texto pratica?',
-      options: readingOptions.options,
-      answer: readingOptions.answer,
-    },
+    reading: buildReadingExercise(level, topic, focus, dayIndex),
     writing: base.writing,
   };
 }
@@ -477,8 +497,8 @@ function getDailyCefrExplanations(level: CEFRLevel, exercise: CefrExerciseSet) {
     },
     reading: {
       key: exercise.reading.options[exercise.reading.answer],
-      zh: `阅读材料今天更换了情境。根据文本里的转折、原因或结果，可以判断训练重点。`,
-      pt: 'O texto de hoje usa outro contexto; a resposta aparece na relação entre causa, contraste ou resultado.',
+      zh: `答案来自阅读文本中的具体信息，需要结合前后句判断，不是单独看一个词。`,
+      pt: 'A resposta vem de informação concreta do texto e depende da relação entre as frases.',
     },
     speaking: {
       zh: `口语任务今天围绕同一主题展开，重点是用提示词组织一段完整表达。`,
