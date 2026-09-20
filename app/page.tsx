@@ -838,11 +838,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const verbStartIndex = Array.from(`${dayKey}-${selectedLevel}`).reduce((sum, character) => sum + character.charCodeAt(0), 0) % verbQuestions.length;
   const verb = verbQuestions[(verbStartIndex + verbRound * 5 + verbStep) % verbQuestions.length];
   const todayLearningRecord = activeLearningProgress.history[dayKey];
-  const skillExerciseIndex = Math.max(
-    activeLearningProgress.lesson,
-    vocabLoopStats.sessions,
-    Object.values(activeLearningProgress.history).filter(record => record.studied || record.completed || record.completedStages > 0).length,
-  );
+  const skillExerciseIndex = getVocabCalendarDayIndex(dayKey);
   const gender = genderQuestions[genderStage * GENDER_STAGE_SIZE + genderStep];
   const visibleGenderScore = genderScore + (genderChoice === gender.gender ? 1 : 0);
   const levelExercise = getDailyCefrExercise(selectedLevel, skillExerciseIndex);
