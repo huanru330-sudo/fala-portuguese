@@ -432,23 +432,23 @@ const skillTopics: Record<CEFRLevel, SkillTopic[]> = {
 };
 
 const skillFocuses = [
-  { zh: '原因', pt: 'causa', phrase: 'porque precisava resolver isso antes do almoço' },
-  { zh: '结果', pt: 'resultado', phrase: 'e por isso mudou o plano inicial' },
+  { zh: '原因', pt: 'causa', phrase: 'por uma necessidade concreta' },
+  { zh: '结果', pt: 'resultado', phrase: 'com foco no resultado final' },
   { zh: '困难', pt: 'dificuldade', phrase: 'apesar de uma dificuldade inesperada' },
   { zh: '建议', pt: 'sugestão', phrase: 'com a sugestão de continuar no dia seguinte' },
   { zh: '比较', pt: 'comparação', phrase: 'em comparação com a opção anterior' },
-  { zh: '优先事项', pt: 'prioridade', phrase: 'pois isso era a prioridade do momento' },
+  { zh: '优先事项', pt: 'prioridade', phrase: 'como prioridade do momento' },
   { zh: '风险', pt: 'risco', phrase: 'embora houvesse um risco claro' },
   { zh: '变化', pt: 'mudança', phrase: 'depois de uma mudança de última hora' },
   { zh: '理由', pt: 'motivo', phrase: 'por um motivo simples e prático' },
   { zh: '后续行动', pt: 'próximo passo', phrase: 'antes de decidir o próximo passo' },
   { zh: '限制', pt: 'limitação', phrase: 'sem ignorar uma limitação importante' },
-  { zh: '好处', pt: 'benefício', phrase: 'porque o benefício parecia maior' },
-  { zh: '反面影响', pt: 'efeito negativo', phrase: 'mas o efeito negativo também apareceu' },
+  { zh: '好处', pt: 'benefício', phrase: 'pelo benefício esperado' },
+  { zh: '反面影响', pt: 'efeito negativo', phrase: 'considerando também seus efeitos negativos' },
   { zh: '时间安排', pt: 'horário', phrase: 'dentro do horário combinado' },
   { zh: '个人选择', pt: 'escolha pessoal', phrase: 'como uma escolha pessoal bem pensada' },
   { zh: '共同决定', pt: 'decisão conjunta', phrase: 'após uma decisão tomada em conjunto' },
-  { zh: '信息不足', pt: 'falta de informação', phrase: 'porque faltavam informações confiáveis' },
+  { zh: '信息不足', pt: 'falta de informação', phrase: 'diante da falta de informações confiáveis' },
   { zh: '解决办法', pt: 'solução', phrase: 'até encontrar uma solução simples' },
   { zh: '观点', pt: 'opinião', phrase: 'segundo a opinião apresentada' },
   { zh: '例外情况', pt: 'exceção', phrase: 'salvo em casos muito específicos' },
@@ -465,9 +465,9 @@ function buildReadingExercise(level: CEFRLevel, topic: SkillTopic, focus: typeof
     A1: `Hoje estou ${topic.place}. Primeiro vou ${topic.action}. Depois vou ${topic.result}. Atenção: ${topic.contrast}.`,
     A2: `Mensagem: estou ${topic.place} e preciso ${topic.action} ${focus.phrase}. Se tudo der certo, vou ${topic.result}. O problema é que ${topic.contrast}.`,
     B1: `A experiência com ${topic.pt} começou ${topic.place}. A pessoa tentou ${topic.action} ${focus.phrase}. A principal dificuldade foi que ${topic.contrast}, mas o objetivo era ${topic.result}.`,
-    B2: `A proposta ligada a ${topic.pt} parte de um problema concreto: ${topic.contrast}. Por isso, o grupo decidiu ${topic.action} ${focus.phrase}. A expectativa é ${topic.result}, desde que haja acompanhamento.`,
-    C1: `No contexto de ${topic.pt}, a questão não se resume a uma decisão rápida. Convém ${topic.action} ${focus.phrase}, pois isso pode ${topic.result}. Ainda assim, ${topic.contrast}, o que exige critérios claros de avaliação.`,
-    C2: `Em ${topic.pt}, ${topic.action} não é apenas um procedimento técnico, mas uma forma de reorganizar o próprio problema. Esse movimento permite ${topic.result}; contudo, ${topic.contrast}. A leitura central depende de perceber essa tensão, não apenas de identificar palavras isoladas.`,
+    B2: `A proposta sobre ${topic.pt} parte de um problema concreto: ${topic.contrast}. Por isso, o grupo decidiu ${topic.action} ${focus.phrase}. A expectativa é ${topic.result}, desde que haja acompanhamento.`,
+    C1: `Ao tratar de ${topic.pt}, a questão não se resume a uma decisão rápida. Convém ${topic.action} ${focus.phrase}, pois isso pode ${topic.result}. Ainda assim, ${topic.contrast}, o que exige critérios claros de avaliação.`,
+    C2: `Ao tratar de ${topic.pt}, ${topic.action} não é apenas um procedimento técnico, mas uma forma de reorganizar o próprio problema. Esse movimento permite ${topic.result}; contudo, ${topic.contrast}. A leitura central depende de perceber essa tensão, não apenas de identificar palavras isoladas.`,
   };
   const questions: Record<CEFRLevel, { zh: string; pt: string }> = {
     A1: { zh: '这个人接下来要做什么？', pt: 'O que a pessoa vai fazer depois?' },
@@ -505,7 +505,7 @@ function getDailyCefrExercise(level: CEFRLevel, dayIndex: number): CefrExerciseS
     A2: `Ontem, ${topic.place}, precisei ${topic.action} ${focus.phrase}. No fim, consegui ${topic.result}.`,
     B1: `Quando surgiu a situação sobre ${topic.pt}, tentei ${topic.action} ${focus.phrase}. A principal dificuldade foi que ${topic.contrast}, mas consegui ${topic.result}.`,
     B2: `Ao discutir ${topic.pt}, o grupo propôs ${topic.action} ${focus.phrase}. A medida poderia ${topic.result}; no entanto, ${topic.contrast}.`,
-    C1: `No contexto de ${topic.pt}, convém ${topic.action} ${focus.phrase}. Tal movimento tende a ${topic.result}, embora ${topic.contrast}.`,
+    C1: `Ao tratar de ${topic.pt}, convém ${topic.action} ${focus.phrase}. Tal movimento tende a ${topic.result}; ainda assim, ${topic.contrast}.`,
     C2: `A reflexão sobre ${topic.pt} exige ${topic.action} ${focus.phrase}; desse modo, torna-se possível ${topic.result}, sem apagar que ${topic.contrast}.`,
   };
 
