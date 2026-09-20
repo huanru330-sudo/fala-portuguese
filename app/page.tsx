@@ -742,6 +742,7 @@ const genderQuestions: Array<{ word: string; gender: GenderValue; article: strin
 const GENDER_STAGE_SIZE = 10;
 const GENDER_STAGE_COUNT = genderQuestions.length / GENDER_STAGE_SIZE;
 const VOCAB_CONTENT_VERSION = 'oi-v8-single-word-skills-20260913';
+const VOCAB_SCHEDULE_VERSION = 'calendar-daily-v1-20260920';
 const PROFILE_CALENDAR_START = new Date(2026, 5, 1);
 const PROFILE_CALENDAR_MONTH_COUNT = 14;
 const VOCAB_CALENDAR_START = new Date(2026, 8, 1);
@@ -1198,6 +1199,16 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
       if (key && stalePrefixes.some(prefix => key.startsWith(prefix))) localStorage.removeItem(key);
     }
     localStorage.setItem('fala-vocab-content-version', VOCAB_CONTENT_VERSION);
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem('fala-vocab-schedule-version') === VOCAB_SCHEDULE_VERSION) return;
+    const stalePrefixes = ['fala-vocab-session-', 'fala-vocab-next-deck'];
+    for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+      const key = localStorage.key(index);
+      if (key && stalePrefixes.some(prefix => key.startsWith(prefix))) localStorage.removeItem(key);
+    }
+    localStorage.setItem('fala-vocab-schedule-version', VOCAB_SCHEDULE_VERSION);
   }, []);
 
   useEffect(() => {
