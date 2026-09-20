@@ -176,6 +176,7 @@ type VocabLoopStats = {
   completedWordTotal: number;
   completedTopics: number[];
   mistakeWords: string[];
+  mistakeDate: string;
   lastCompletedDate: string;
 };
 type DailyLearningRecord = { completedStages: number; completed: boolean; studied?: boolean };
@@ -200,6 +201,7 @@ const defaultVocabLoopStats: VocabLoopStats = {
   completedWordTotal: 0,
   completedTopics: [],
   mistakeWords: [],
+  mistakeDate: '',
   lastCompletedDate: '',
 };
 
@@ -245,6 +247,7 @@ function normalizeVocabLoopStats(value: unknown): VocabLoopStats {
     ),
     completedTopics: Array.isArray(saved.completedTopics) ? saved.completedTopics.filter((item: unknown) => Number.isInteger(item)) : [],
     mistakeWords: Array.isArray(saved.mistakeWords) ? saved.mistakeWords.filter((item: unknown) => typeof item === 'string') : [],
+    mistakeDate: typeof saved.mistakeDate === 'string' ? saved.mistakeDate : '',
     lastCompletedDate: typeof saved.lastCompletedDate === 'string' ? saved.lastCompletedDate : '',
   };
 }
@@ -826,8 +829,11 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const activeLearningProgress: LevelLearningProgress = learningProgress[selectedLevel] || { lesson: 0, stage: 0, startedOn: dayKey, history: {} };
   const totalVocabularyWords = levelDeckIndices.reduce((sum, index) => sum + vocabularyDecks[index].words.length, 0);
   const weeklySessions = vocabLoopStats.sessions % 7;
+  const activeMistakeWords = vocabLoopStats.mistakeDate === dayKey ? vocabLoopStats.mistakeWords.slice(0, 5) : [];
+  const allVocabularyItems = vocabularyDecks.flatMap((deck, deckIndex) => deck.words.map((word, wordIndex) => ({ word, id: deckIndex * 100 + wordIndex })));
+  const mistakeReviewItems = activeMistakeWords.map(word => allVocabularyItems.find(item => item.word.pt === word)).filter((item): item is { word: VocabularyWord; id: number } => Boolean(item));
   const regularReviewItems = reviewIndices.map(index => ({ word: todaysWords[index], id: vocabDeckIndex * 100 + index }));
-  const reviewItems = regularReviewItems.slice(0, 5);
+  const reviewItems = [...mistakeReviewItems, ...regularReviewItems.filter(item => !mistakeReviewItems.some(mistake => mistake.word.pt === item.word.pt))].slice(0, 5);
   const vocabProgressPercent = vocabPhase === 'learn' ? completedVocabWords * 4
     : vocabPhase === 'quiz' ? 40 + (vocabQuizIndex + (vocabQuizChoice === null ? 0 : 1)) * 4
     : vocabPhase === 'review' ? 80 + revealedReview.length * 4
@@ -874,7 +880,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     sessions: '打卡天数',
     words: '已覆盖词汇',
     topics: '主题进度',
-    mistakes: '错误记录',
+    mistakes: '今日错词',
     weekly: '周测进度',
     weeklyReady: '周测已解锁',
     weeklyLeft: '再完成',
@@ -891,7 +897,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     sessions: 'Dias concluídos',
     words: 'Palavras cobertas',
     topics: 'Temas',
-    mistakes: 'Erros registrados',
+    mistakes: 'Erros de hoje',
     weekly: 'Teste semanal',
     weeklyReady: 'Teste desbloqueado',
     weeklyLeft: 'Faltam',
@@ -1597,8 +1603,9 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   }
 
   function recordVocabMistake(word: string) {
-    const nextMistakes = [word, ...vocabLoopStats.mistakeWords.filter(item => item !== word)].slice(0, 30);
-    saveVocabLoopStats({ ...vocabLoopStats, mistakeWords: nextMistakes });
+    const currentMistakes = vocabLoopStats.mistakeDate === dayKey ? vocabLoopStats.mistakeWords : [];
+    const nextMistakes = [word, ...currentMistakes.filter(item => item !== word)].slice(0, 30);
+    saveVocabLoopStats({ ...vocabLoopStats, mistakeWords: nextMistakes, mistakeDate: dayKey });
   }
 
   function updateVocabSentence(index: number, sentence: string) {
@@ -1897,6 +1904,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         <span><b>{loopUi.topics}</b>{vocabLoopStats.completedTopics.filter(index=>levelDeckIndices.includes(index)).length}/{levelDeckIndices.length}</span>
         <span><b>{loopUi.weekly}</b>{weeklySessions === 0 && vocabLoopStats.sessions > 0 ? loopUi.weeklyReady : `${loopUi.weeklyLeft} ${7 - weeklySessions} ${loopUi.weeklyUnit}`}</span>
       </div>
+      {activeMistakeWords.length > 0 && <p className="vocab-mistake-note">{loopUi.mistakes}: {activeMistakeWords.join(' · ')}</p>}
       <div className="vocab-session-route">
         <div className={vocabPhase === 'learn' ? 'active' : 'done'}><b>1</b><span>{ui.learnPhase}<small>{ui.learnTime}</small></span></div>
         <div className={vocabPhase === 'quiz' ? 'active' : ['review','done'].includes(vocabPhase) ? 'done' : ''}><b>2</b><span>{ui.quizPhase}<small>{ui.quizTime}</small></span></div>
@@ -1970,7 +1978,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         <p className="eyebrow">{ui.checked}</p>
         <h1>{ui.dailyDone}</h1>
         <p>{ui.dailySummary}</p>
-        <div className="vocab-day-result"><span>{ui.result}<b>{vocabQuizScore}/10</b></span><span>{vocabLoopStats.sessions}<small>{loopUi.sessions}</small></span><span>{vocabLoopStats.mistakeWords.length}<small>{loopUi.mistakes}</small></span></div>
+        <div className="vocab-day-result"><span>{ui.result}<b>{vocabQuizScore}/10</b></span><span>{vocabLoopStats.sessions}<small>{loopUi.sessions}</small></span><span>{activeMistakeWords.length}<small>{loopUi.mistakes}</small></span></div>
         <p className="vocab-loop-done">{levelDeckPosition === levelDeckIndices.length - 1 ? `${loopUi.afterAll} ${loopUi.nextCycle}: ${nextCycle} · ${loopUi.cycleNames[(nextCycle - 1) % 4]}` : loopUi.afterAll}</p>
         <div className="next-topic"><small>{ui.tomorrowTopic}</small><strong>{language === 'zh' ? nextVocabDeck.topicZh : nextVocabDeck.topicPt} · {nextVocabDeck.level}</strong></div>
         <button className="next-question" onClick={startNextVocabDeck}><span>{ui.extraLesson}</span><b aria-hidden="true">→</b></button>
