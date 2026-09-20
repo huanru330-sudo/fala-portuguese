@@ -36,6 +36,7 @@ type Copy = typeof text.zh;
 let activeAudio: HTMLAudioElement | null = null;
 let activeAudioUrl = '';
 let audioPlayRequest = 0;
+let preferBrowserPortugueseSpeech = false;
 
 function clearActivePortugueseAudio(cancelRequests = true) {
   if (cancelRequests) audioPlayRequest += 1;
@@ -52,13 +53,51 @@ function stopPortugueseAudio() {
   clearActivePortugueseAudio();
 }
 
-async function playPortugueseAudio(textToSpeak: string, selectedLevel: CEFRLevel = 'A1', onEnd?: () => void) {
+function playBrowserPortugueseSpeech(textToSpeak: string, selectedLevel: CEFRLevel, requestId: number, onEnd?: () => void) {
+  const synthesis = window.speechSynthesis;
+  if (!synthesis) return Promise.reject(new Error('Browser speech is unavailable'));
+
+  return new Promise<void>((resolve, reject) => {
+    synthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = 'pt-BR';
+    utterance.rate = ['A1','A2'].includes(selectedLevel) ? .82 : ['B1','B2'].includes(selectedLevel) ? .94 : 1.04;
+    const voices = synthesis.getVoices();
+    utterance.voice = voices.find(voice => voice.lang.toLocaleLowerCase('pt-BR') === 'pt-br')
+      || voices.find(voice => voice.lang.toLocaleLowerCase('pt-BR').startsWith('pt'))
+      || null;
+    utterance.onend = () => {
+      if (requestId === audioPlayRequest) onEnd?.();
+      resolve();
+    };
+    utterance.onerror = () => {
+      if (requestId === audioPlayRequest) onEnd?.();
+      reject(new Error('Browser speech failed'));
+    };
+    synthesis.speak(utterance);
+    window.setTimeout(() => synthesis.resume(), 250);
+  });
+}
+
+async function playPortugueseAudio(
+  textToSpeak: string,
+  selectedLevel: CEFRLevel = 'A1',
+  onEnd?: () => void,
+  onFallback?: () => void,
+  onUnavailable?: () => void,
+) {
   const requestId = audioPlayRequest + 1;
   audioPlayRequest = requestId;
   const rate = ['A1','A2'].includes(selectedLevel) ? '-12%' : ['B1','B2'].includes(selectedLevel) ? '-5%' : '+2%';
 
   try {
     clearActivePortugueseAudio(false);
+
+    if (preferBrowserPortugueseSpeech) {
+      onFallback?.();
+      await playBrowserPortugueseSpeech(textToSpeak, selectedLevel, requestId, onEnd);
+      return;
+    }
 
     const response = await fetch('/api/tts', {
       method: 'POST',
@@ -86,13 +125,14 @@ async function playPortugueseAudio(textToSpeak: string, selectedLevel: CEFRLevel
     await audio.play();
   } catch {
     if (requestId !== audioPlayRequest) return;
-    window.speechSynthesis?.cancel();
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = 'pt-BR';
-    utterance.rate = ['A1','A2'].includes(selectedLevel) ? .82 : ['B1','B2'].includes(selectedLevel) ? .94 : 1.04;
-    utterance.onend = () => { if (requestId === audioPlayRequest) onEnd?.(); };
-    utterance.onerror = () => { if (requestId === audioPlayRequest) onEnd?.(); };
-    window.speechSynthesis?.speak(utterance);
+    onFallback?.();
+    preferBrowserPortugueseSpeech = true;
+    try {
+      await playBrowserPortugueseSpeech(textToSpeak, selectedLevel, requestId, onEnd);
+    } catch {
+      onUnavailable?.();
+      throw new Error('Portuguese audio unavailable');
+    }
   }
 }
 
@@ -744,6 +784,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const [speakingRecordingUrl, setSpeakingRecordingUrl] = useState('');
   const [speakingRecordingError, setSpeakingRecordingError] = useState('');
   const [playingAudioKey, setPlayingAudioKey] = useState('');
+  const [audioNotice, setAudioNotice] = useState('');
   const [writingText, setWritingText] = useState('');
   const [writingEvaluated, setWritingEvaluated] = useState(false);
   const [learningProgress, setLearningProgress] = useState<LearningProgress>({});
@@ -1406,6 +1447,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     stopAudioPlayback();
     setMode(nextMode);
     setComprehensionAnswer(null);
+    setAudioNotice('');
     setWritingText('');
     setWritingEvaluated(false);
     stopSpeakingRecording();
@@ -1426,6 +1468,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   function stopAudioPlayback() {
     stopPortugueseAudio();
     setActiveAudioKey('');
+    setAudioNotice('');
   }
 
   function playPortuguese(textToSpeak: string, audioKey: string) {
@@ -1435,10 +1478,25 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     }
 
     setActiveAudioKey(audioKey);
+    setAudioNotice('');
     void playPortugueseAudio(textToSpeak, selectedLevel, () => {
-      if (playingAudioKeyRef.current === audioKey) setActiveAudioKey('');
+      if (playingAudioKeyRef.current === audioKey) {
+        setActiveAudioKey('');
+        setAudioNotice('');
+      }
+    }, () => {
+      if (playingAudioKeyRef.current === audioKey) {
+        setAudioNotice(language === 'zh' ? 'Azure 语音暂时不可用，正在使用手机/浏览器系统语音。' : 'A voz do Azure está indisponível; usando a voz do sistema.');
+      }
+    }, () => {
+      if (playingAudioKeyRef.current === audioKey) {
+        setAudioNotice(language === 'zh' ? '语音暂时不可用，请稍后再试。' : 'Áudio temporariamente indisponível. Tente novamente mais tarde.');
+      }
     }).catch(() => {
-      if (playingAudioKeyRef.current === audioKey) setActiveAudioKey('');
+      if (playingAudioKeyRef.current === audioKey) {
+        setActiveAudioKey('');
+        setAudioNotice(language === 'zh' ? '语音暂时不可用，请稍后再试。' : 'Áudio temporariamente indisponível. Tente novamente mais tarde.');
+      }
     });
   }
 
@@ -1973,7 +2031,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         </div>}
       </section>
     )}
-    {mode === 'listening' && <section className="study-panel skill-exercise mt-8 rounded-[28px] p-6"><div className="skill-level-row"><span>{selectedLevel}</span><small>{language==='zh'?cefrInfo[selectedLevel].zh:cefrInfo[selectedLevel].pt}</small></div><div className="audio-stage mt-6"><span>◖)))</span><p>{language==='zh'?'先听，不看文本':'Ouça antes de ler'}</p><button onClick={()=>playPortuguese(levelExercise.listening.text, listeningAudioKey)}>{playingAudioKey === listeningAudioKey ? `■ ${stopAudioLabel}` : comprehensionAnswer===null?skillUi.play:skillUi.replay}</button></div><p className="mt-6 text-xs font-black text-[#18352f]/55">{skillUi.question}</p><h2 className="mt-2 text-lg font-black">{language==='zh'?levelExercise.listening.questionZh:levelExercise.listening.questionPt}</h2><div className="exercise-options mt-4">{levelExercise.listening.options.map((option,index)=><button key={option} onClick={()=>{setComprehensionAnswer(index);if(index===levelExercise.listening.answer)completeJourneyStage(1)}} className={comprehensionAnswer===index?(index===levelExercise.listening.answer?'correct':'wrong'):''}>{option}</button>)}</div>{comprehensionAnswer!==null&&<div className={`answer-feedback detailed mt-5 ${comprehensionAnswer===levelExercise.listening.answer?'correct':'wrong'}`}><strong>{comprehensionAnswer===levelExercise.listening.answer?skillUi.correct:skillUi.wrong}</strong><dl><div><dt>{skillUi.correctAnswer}</dt><dd>{levelExercise.listening.options[levelExercise.listening.answer]}</dd></div><div><dt>{skillUi.evidence}</dt><dd>“{levelExerciseExplanations.listening.key}”</dd></div><div><dt>{skillUi.analysis}</dt><dd>{language==='zh'?levelExerciseExplanations.listening.zh:levelExerciseExplanations.listening.pt}</dd></div><div><dt>{skillUi.transcript}</dt><dd>{levelExercise.listening.text}</dd></div></dl></div>}</section>}
+    {mode === 'listening' && <section className="study-panel skill-exercise mt-8 rounded-[28px] p-6"><div className="skill-level-row"><span>{selectedLevel}</span><small>{language==='zh'?cefrInfo[selectedLevel].zh:cefrInfo[selectedLevel].pt}</small></div><div className="audio-stage mt-6"><span>◖)))</span><p>{language==='zh'?'先听，不看文本':'Ouça antes de ler'}</p><button onClick={()=>playPortuguese(levelExercise.listening.text, listeningAudioKey)}>{playingAudioKey === listeningAudioKey ? `■ ${stopAudioLabel}` : comprehensionAnswer===null?skillUi.play:skillUi.replay}</button>{audioNotice&&<small className="audio-notice">{audioNotice}</small>}</div><p className="mt-6 text-xs font-black text-[#18352f]/55">{skillUi.question}</p><h2 className="mt-2 text-lg font-black">{language==='zh'?levelExercise.listening.questionZh:levelExercise.listening.questionPt}</h2><div className="exercise-options mt-4">{levelExercise.listening.options.map((option,index)=><button key={option} onClick={()=>{setComprehensionAnswer(index);if(index===levelExercise.listening.answer)completeJourneyStage(1)}} className={comprehensionAnswer===index?(index===levelExercise.listening.answer?'correct':'wrong'):''}>{option}</button>)}</div>{comprehensionAnswer!==null&&<div className={`answer-feedback detailed mt-5 ${comprehensionAnswer===levelExercise.listening.answer?'correct':'wrong'}`}><strong>{comprehensionAnswer===levelExercise.listening.answer?skillUi.correct:skillUi.wrong}</strong><dl><div><dt>{skillUi.correctAnswer}</dt><dd>{levelExercise.listening.options[levelExercise.listening.answer]}</dd></div><div><dt>{skillUi.evidence}</dt><dd>“{levelExerciseExplanations.listening.key}”</dd></div><div><dt>{skillUi.analysis}</dt><dd>{language==='zh'?levelExerciseExplanations.listening.zh:levelExerciseExplanations.listening.pt}</dd></div><div><dt>{skillUi.transcript}</dt><dd>{levelExercise.listening.text}</dd></div></dl></div>}</section>}
     {mode === 'speaking' && <section className="study-panel skill-exercise mt-8 rounded-[28px] p-6"><div className="skill-level-row"><span>{selectedLevel}</span><small>{skillUi.speakingTask}</small></div><h1 className="mt-5 text-xl font-black leading-relaxed">{language==='zh'?levelExercise.speaking.promptZh:levelExercise.speaking.promptPt}</h1><p className="mt-6 text-xs font-black text-[#18352f]/55">{skillUi.goals}</p><div className="speaking-cues mt-3">{levelExercise.speaking.cues.map(cue=><span key={cue}>{cue}</span>)}</div><button onClick={()=>{playPortuguese(levelExercise.speaking.model, speakingModelAudioKey);setShowSpeakingModel(true)}} className="model-button mt-6">{playingAudioKey === speakingModelAudioKey ? `■ ${stopAudioLabel}` : `▶ ${skillUi.model}`}</button>{showSpeakingModel&&<div className="model-analysis mt-4"><strong>{skillUi.modelAnswer}</strong><p>{levelExercise.speaking.model}</p><small>{language==='zh'?levelExerciseExplanations.speaking.zh:levelExerciseExplanations.speaking.pt}</small></div>}<div className={`speaking-timer mt-6 ${speakingActive?'active':''}`}><span>{speakingActive?'●':'○'}</span><p>{speakingActive?(language==='zh'?'正在录音，请连续表达，尽量覆盖三个目标':'Gravando. Fale continuamente e use os três objetivos'):(language==='zh'?'准备好后开始录音，结束后可以回听自己的声音':'Comece a gravar quando estiver pronto; depois ouça sua voz')}</p></div><button onClick={()=>void toggleSpeakingRecording()} className="primary-wide mt-5"><span>{speakingActive?'■':'◉'}</span>{speakingActive?skillUi.finishSpeaking:skillUi.startSpeaking}</button>{speakingRecordingError&&<p className="speaking-error mt-4">{speakingRecordingError}</p>}{speakingRecordingUrl&&<div className="speaking-playback mt-4"><strong>{language==='zh'?'我的录音':'Minha gravação'}</strong><audio controls src={speakingRecordingUrl}/></div>}</section>}
     {mode === 'reading' && <section className="study-panel skill-exercise mt-8 rounded-[28px] p-6"><div className="skill-level-row"><span>{selectedLevel}</span><small>{skillUi.readingTask}</small></div><article className="reading-passage mt-5">{levelExercise.reading.text}</article><p className="mt-6 text-xs font-black text-[#18352f]/55">{skillUi.question}</p><h2 className="mt-2 text-lg font-black">{language==='zh'?levelExercise.reading.questionZh:levelExercise.reading.questionPt}</h2><div className="exercise-options mt-4">{levelExercise.reading.options.map((option,index)=><button key={option} onClick={()=>{setComprehensionAnswer(index);if(index===levelExercise.reading.answer)completeJourneyStage(2)}} className={comprehensionAnswer===index?(index===levelExercise.reading.answer?'correct':'wrong'):''}>{option}</button>)}</div>{comprehensionAnswer!==null&&<div className={`answer-feedback detailed mt-5 ${comprehensionAnswer===levelExercise.reading.answer?'correct':'wrong'}`}><strong>{comprehensionAnswer===levelExercise.reading.answer?skillUi.correct:skillUi.wrong}</strong><dl><div><dt>{skillUi.correctAnswer}</dt><dd>{levelExercise.reading.options[levelExercise.reading.answer]}</dd></div><div><dt>{skillUi.evidence}</dt><dd>“{levelExerciseExplanations.reading.key}”</dd></div><div><dt>{skillUi.analysis}</dt><dd>{language==='zh'?levelExerciseExplanations.reading.zh:levelExerciseExplanations.reading.pt}</dd></div></dl></div>}</section>}
     <button onClick={returnToJourney} className="mt-6 w-full text-sm font-bold text-[#18352f]/55">← {reviewingStage!==null?(language==='zh'?'返回学习地图':'Voltar ao mapa'):ui.back}</button>

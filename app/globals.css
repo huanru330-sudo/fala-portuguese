@@ -1591,6 +1591,7 @@ button:focus-visible {
 .audio-stage > span { color: var(--tile-lime); font-size: 30px; font-weight: 900; }
 .audio-stage p { margin-top: 5px; color: rgba(255,255,255,.68); font-size: 11px; }
 .audio-stage button { margin-top: 16px; border-radius: 999px; background: var(--tile-lime); padding: 10px 15px; color: var(--tile-blue); font-size: 12px; font-weight: 900; }
+.audio-stage .audio-notice { display: block; margin-top: 10px; color: rgba(255,255,255,.78); font-size: 10px; font-weight: 900; line-height: 1.45; }
 
 .exercise-options { display: grid; gap: 9px; }
 .exercise-options button { border: 1px solid rgba(18,61,130,.25); border-radius: 13px; background: white; padding: 12px 13px; color: var(--tile-blue); font-size: 12px; font-weight: 800; text-align: left; }
