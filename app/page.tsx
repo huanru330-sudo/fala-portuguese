@@ -744,10 +744,19 @@ const GENDER_STAGE_COUNT = genderQuestions.length / GENDER_STAGE_SIZE;
 const VOCAB_CONTENT_VERSION = 'oi-v8-single-word-skills-20260913';
 const PROFILE_CALENDAR_START = new Date(2026, 5, 1);
 const PROFILE_CALENDAR_MONTH_COUNT = 14;
+const VOCAB_CALENDAR_START = new Date(2026, 8, 1);
 
 function getProfileMonthIndex(date = new Date()) {
   const monthIndex = (date.getFullYear() - PROFILE_CALENDAR_START.getFullYear()) * 12 + date.getMonth() - PROFILE_CALENDAR_START.getMonth();
   return Math.max(0, Math.min(PROFILE_CALENDAR_MONTH_COUNT - 1, monthIndex));
+}
+
+function getVocabCalendarDayIndex(dayKey: string) {
+  const [year, month, day] = dayKey.split('-').map(Number);
+  if (!year || !month || !day) return 0;
+  const start = Date.UTC(VOCAB_CALENDAR_START.getFullYear(), VOCAB_CALENDAR_START.getMonth(), VOCAB_CALENDAR_START.getDate());
+  const current = Date.UTC(year, month - 1, day);
+  return Math.max(0, Math.floor((current - start) / 86_400_000));
 }
 
 function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onHome: () => void }) {
@@ -1368,12 +1377,10 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     return Boolean(record?.studied || record?.completed || (record?.completedStages || 0) > 0);
   }
 
-  function plannedVocabDeckIndex(level: CEFRLevel, progress: LearningProgress = learningProgress) {
+  function plannedVocabDeckIndex(level: CEFRLevel) {
     const indices = vocabularyDecks.map((deck,index)=>deck.level===level?index:-1).filter(index=>index>=0);
     if (!indices.length) return 0;
-    const levelProgress = progress[level];
-    const studiedDaysBeforeToday = Object.entries(levelProgress?.history || {}).filter(([date, record]) => date < dayKey && hasStudyActivity(record)).length;
-    return indices[studiedDaysBeforeToday % indices.length];
+    return indices[getVocabCalendarDayIndex(dayKey) % indices.length];
   }
 
   function completeJourneyStage(stageIndex: number) {
