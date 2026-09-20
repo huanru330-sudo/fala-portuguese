@@ -826,11 +826,8 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const activeLearningProgress: LevelLearningProgress = learningProgress[selectedLevel] || { lesson: 0, stage: 0, startedOn: dayKey, history: {} };
   const totalVocabularyWords = levelDeckIndices.reduce((sum, index) => sum + vocabularyDecks[index].words.length, 0);
   const weeklySessions = vocabLoopStats.sessions % 7;
-  const activeMistakeWords = vocabLoopStats.mistakeWords.slice(0, 5);
-  const allVocabularyItems = vocabularyDecks.flatMap((deck, deckIndex) => deck.words.map((word, wordIndex) => ({ word, id: deckIndex * 100 + wordIndex })));
-  const mistakeReviewItems = activeMistakeWords.map(word => allVocabularyItems.find(item => item.word.pt === word)).filter((item): item is { word: VocabularyWord; id: number } => Boolean(item));
   const regularReviewItems = reviewIndices.map(index => ({ word: todaysWords[index], id: vocabDeckIndex * 100 + index }));
-  const reviewItems = [...mistakeReviewItems, ...regularReviewItems.filter(item => !mistakeReviewItems.some(mistake => mistake.word.pt === item.word.pt))].slice(0, 5);
+  const reviewItems = regularReviewItems.slice(0, 5);
   const vocabProgressPercent = vocabPhase === 'learn' ? completedVocabWords * 4
     : vocabPhase === 'quiz' ? 40 + (vocabQuizIndex + (vocabQuizChoice === null ? 0 : 1)) * 4
     : vocabPhase === 'review' ? 80 + revealedReview.length * 4
@@ -870,14 +867,14 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   };
   const loopUi = language === 'zh' ? {
     title: '每日闭环设置',
-    summary: '每天固定：新词理解 → 词形填空 → 主动回忆 → 错题回流',
+    summary: '每天固定：新词理解 → 词形填空 → 主动回忆 → 错题记录',
     cycle: '当前循环',
     cycleNames: ['新词开荒', '复习强化', '语法加固', '听说回忆'],
-    todayPlan: ['5–10 个新词', '10 道语境填空', '5 个旧词回忆', '错题进入明日复习'],
+    todayPlan: ['5–10 个新词', '10 道语境填空', '5 个本课回忆', '错题只做后台记录'],
     sessions: '打卡天数',
     words: '已覆盖词汇',
     topics: '主题进度',
-    mistakes: '错题池',
+    mistakes: '错误记录',
     weekly: '周测进度',
     weeklyReady: '周测已解锁',
     weeklyLeft: '再完成',
@@ -887,14 +884,14 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
     nextCycle: '下一轮',
   } : {
     title: 'Ciclo diário',
-    summary: 'Todos os dias: palavra nova → lacuna → revisão ativa → erro volta amanhã',
+    summary: 'Todos os dias: palavra nova → lacuna → revisão ativa → registro de erros',
     cycle: 'Ciclo atual',
     cycleNames: ['Palavras novas', 'Reforço', 'Gramática', 'Escuta e fala'],
-    todayPlan: ['5–10 palavras', '10 lacunas em contexto', '5 revisões antigas', 'Erros voltam amanhã'],
+    todayPlan: ['5–10 palavras', '10 lacunas em contexto', '5 revisões da lição', 'Erros ficam só no registro'],
     sessions: 'Dias concluídos',
     words: 'Palavras cobertas',
     topics: 'Temas',
-    mistakes: 'Banco de erros',
+    mistakes: 'Erros registrados',
     weekly: 'Teste semanal',
     weeklyReady: 'Teste desbloqueado',
     weeklyLeft: 'Faltam',
@@ -1900,7 +1897,6 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         <span><b>{loopUi.topics}</b>{vocabLoopStats.completedTopics.filter(index=>levelDeckIndices.includes(index)).length}/{levelDeckIndices.length}</span>
         <span><b>{loopUi.weekly}</b>{weeklySessions === 0 && vocabLoopStats.sessions > 0 ? loopUi.weeklyReady : `${loopUi.weeklyLeft} ${7 - weeklySessions} ${loopUi.weeklyUnit}`}</span>
       </div>
-      {activeMistakeWords.length > 0 && <p className="vocab-mistake-note">{loopUi.mistakes}: {activeMistakeWords.join(' · ')}</p>}
       <div className="vocab-session-route">
         <div className={vocabPhase === 'learn' ? 'active' : 'done'}><b>1</b><span>{ui.learnPhase}<small>{ui.learnTime}</small></span></div>
         <div className={vocabPhase === 'quiz' ? 'active' : ['review','done'].includes(vocabPhase) ? 'done' : ''}><b>2</b><span>{ui.quizPhase}<small>{ui.quizTime}</small></span></div>
