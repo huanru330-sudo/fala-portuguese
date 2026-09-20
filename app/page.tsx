@@ -806,7 +806,7 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   const speakingStreamRef = useRef<MediaStream|null>(null);
   const speakingChunksRef = useRef<Blob[]>([]);
   const playingAudioKeyRef = useRef('');
-  const dayKey = getLocalDayKey();
+  const [dayKey, setDayKey] = useState(() => getLocalDayKey());
   const vocabDeck = vocabularyDecks[vocabDeckIndex] || vocabularyDecks[0];
   const todaysWords = vocabDeck.words;
   const vocabQuizWord = todaysWords[vocabQuizIndex];
@@ -1292,6 +1292,18 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
   }, []);
 
   useEffect(() => {
+    const refreshDayKey = () => setDayKey(getLocalDayKey());
+    const interval = window.setInterval(refreshDayKey, 60_000);
+    window.addEventListener('focus', refreshDayKey);
+    document.addEventListener('visibilitychange', refreshDayKey);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener('focus', refreshDayKey);
+      document.removeEventListener('visibilitychange', refreshDayKey);
+    };
+  }, []);
+
+  useEffect(() => {
     const savedLevel = localStorage.getItem('fala-cefr-level');
     const activeLevel = cefrLevels.includes(savedLevel as CEFRLevel) ? savedLevel as CEFRLevel : selectedLevel;
     if (activeLevel !== selectedLevel) setSelectedLevel(activeLevel);
@@ -1568,6 +1580,8 @@ function PracticeHub({ c, language, onHome }: { c: Copy; language: Language; onH
         setSpeakingActive(false);
         if (blob.size > 0) setSpeakingRecordingUrl(URL.createObjectURL(blob));
         completeJourneyStage(3);
+        setReviewingStage(null);
+        setMode('hub');
       }, { once: true });
       recorder.start();
       setSpeakingActive(true);
